@@ -14,7 +14,7 @@ import {
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gradient bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center">
+      <div className="container flex h-16 max-w-screen-2xl items-center px-4">
         <div className="mr-4 hidden md:flex">
           <Link className="mr-6 flex items-center space-x-2" href="/">
             <Calendar03Icon className="h-7 w-7 text-primary" />

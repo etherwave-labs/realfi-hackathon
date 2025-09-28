@@ -7,7 +7,7 @@ export default function OrganizerLandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-24 lg:py-32">
+      <section className="flex flex-col items-center overflow-hidden py-24 lg:py-32">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-4 text-center">
             <div className="space-y-2">
@@ -15,8 +15,8 @@ export default function OrganizerLandingPage() {
                 Host events with <span className="text-primary">guaranteed attendance</span>
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl text-pretty">
-                Create events with stablecoin deposits. Attendees get rewarded for showing up, no-shows fund the
-                community.
+                Create events with stablecoin deposits. Attendees get rewarded for showing up,
+                no-shows fund the community.
               </p>
             </div>
             <div className="space-x-4">
@@ -32,7 +32,7 @@ export default function OrganizerLandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-12 md:py-24 lg:py-32 bg-muted/50">
+      <section className="flex flex-col items-center py-12 md:py-24 lg:py-32 bg-muted/50">
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-3 lg:gap-12">
             <div className="flex flex-col items-center space-y-4 text-center">
@@ -63,7 +63,9 @@ export default function OrganizerLandingPage() {
               </div>
               <div className="space-y-2">
                 <h3 className="text-xl font-bold">Real-time Analytics</h3>
-                <p className="text-muted-foreground">Track registrations, attendance, and earnings in real-time</p>
+                <p className="text-muted-foreground">
+                  Track registrations, attendance, and earnings in real-time
+                </p>
               </div>
             </div>
           </div>
@@ -71,7 +73,7 @@ export default function OrganizerLandingPage() {
       </section>
 
       {/* How It Works */}
-      <section className="py-12 md:py-24 lg:py-32">
+      <section className="flex flex-col items-center py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
@@ -88,7 +90,9 @@ export default function OrganizerLandingPage() {
                   1
                 </div>
                 <CardTitle>Create Your Event</CardTitle>
-                <CardDescription>Set event details, capacity, and registration fee in stablecoins</CardDescription>
+                <CardDescription>
+                  Set event details, capacity, and registration fee in stablecoins
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card>
@@ -97,7 +101,9 @@ export default function OrganizerLandingPage() {
                   2
                 </div>
                 <CardTitle>Attendees Register</CardTitle>
-                <CardDescription>People pay registration fees which are held in smart contracts</CardDescription>
+                <CardDescription>
+                  People pay registration fees which are held in smart contracts
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card>
@@ -106,7 +112,9 @@ export default function OrganizerLandingPage() {
                   3
                 </div>
                 <CardTitle>Automatic Settlement</CardTitle>
-                <CardDescription>Attendees get refunds + bonuses, you receive service fees</CardDescription>
+                <CardDescription>
+                  Attendees get refunds + bonuses, you receive service fees
+                </CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -114,13 +122,16 @@ export default function OrganizerLandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 md:py-24 lg:py-32 bg-muted/50">
+      <section className="flex flex-col items-center py-12 md:py-24 lg:py-32 bg-muted/50">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">Ready to get started?</h2>
+              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
+                Ready to get started?
+              </h2>
               <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Join hundreds of organizers who are creating better events with guaranteed attendance
+                Join hundreds of organizers who are creating better events with guaranteed
+                attendance
               </p>
             </div>
             <div className="space-x-4">
