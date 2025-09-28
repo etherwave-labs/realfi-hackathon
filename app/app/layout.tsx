@@ -14,14 +14,10 @@ export const metadata: Metadata = {
   description: "Register for local events with stablecoins and get rewarded for attendance",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} antialiased`}>
-      <body className="min-h-screen bg-background font-sans">
+      <body className="min-h-screen bg-background font-sans w-full">
         <Header />
         <main className="flex-1">{children}</main>
       </body>

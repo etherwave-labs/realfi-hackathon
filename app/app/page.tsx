@@ -7,27 +7,33 @@ import {
   Location01Icon,
   UserGroupIcon,
   WalletAdd01Icon,
-  ShieldCheckmarkIcon,
-  Zap01Icon,
+  CheckmarkBadge03Icon,
+  ZapIcon,
 } from "hugeicons-react"
 
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-32 lg:py-40 bg-gradient-to-br from-background via-background to-card">
+      <section className="flex flex-col items-center overflow-hidden py-32 lg:py-40 bg-gradient-to-br from-background via-background to-card">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center space-y-8 text-center">
             <div className="space-y-6">
               <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none text-balance">
-                Decentralized events with <span className="text-gradient-primary">guaranteed rewards</span>
+                Decentralized events with{" "}
+                <span className="text-gradient-primary">guaranteed rewards</span>
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl lg:text-2xl text-pretty leading-relaxed">
-                Register for local events with stablecoins. Get rewarded for showing up. No-shows fund the community.
+                Register for local events with stablecoins. Get rewarded for showing up. No-shows
+                fund the community.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg" className="gradient-primary rounded-2xl text-lg px-8 py-6 font-semibold">
+              <Button
+                asChild
+                size="lg"
+                className="gradient-primary rounded-2xl text-lg px-8 py-6 font-semibold"
+              >
                 <Link href="/events">Discover Events</Link>
               </Button>
               <Button
@@ -44,7 +50,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 md:py-32 lg:py-40">
+      <section className="flex flex-col items-center py-16 md:py-32 lg:py-40">
         <div className="container px-4 md:px-6">
           <div className="grid gap-8 lg:grid-cols-3 lg:gap-12">
             <div className="flex flex-col items-center space-y-6 text-center">
@@ -60,7 +66,7 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col items-center space-y-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl gradient-accent shadow-lg">
-                <ShieldCheckmarkIcon className="h-8 w-8 text-white" />
+                <CheckmarkBadge03Icon className="h-8 w-8 text-white" />
               </div>
               <div className="space-y-3">
                 <h3 className="text-2xl font-bold">Guaranteed Refunds</h3>
@@ -71,7 +77,7 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col items-center space-y-6 text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl gradient-warm shadow-lg">
-                <Zap01Icon className="h-8 w-8 text-white" />
+                <ZapIcon className="h-8 w-8 text-white" />
               </div>
               <div className="space-y-3">
                 <h3 className="text-2xl font-bold">Instant Settlement</h3>
@@ -85,7 +91,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Events Preview */}
-      <section className="py-16 md:py-32 lg:py-40 bg-card/30">
+      <section className="flex flex-col items-center py-16 md:py-32 lg:py-40 bg-card/30">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-6 text-center">
             <div className="space-y-4">
@@ -99,7 +105,10 @@ export default function HomePage() {
             <Card className="rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="rounded-2xl bg-accent/20 text-accent font-semibold">
+                  <Badge
+                    variant="secondary"
+                    className="rounded-2xl bg-accent/20 text-accent font-semibold"
+                  >
                     Tech Meetup
                   </Badge>
                   <span className="text-lg font-bold text-primary">25 USDC</span>
@@ -129,13 +138,18 @@ export default function HomePage() {
             <Card className="rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl">
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="rounded-2xl bg-chart-4/20 text-chart-4 font-semibold">
+                  <Badge
+                    variant="secondary"
+                    className="rounded-2xl bg-chart-4/20 text-chart-4 font-semibold"
+                  >
                     Workshop
                   </Badge>
                   <span className="text-lg font-bold text-primary">50 USDC</span>
                 </div>
                 <CardTitle className="text-2xl">DeFi Trading Workshop</CardTitle>
-                <CardDescription className="text-base">Hands-on workshop for DeFi trading strategies</CardDescription>
+                <CardDescription className="text-base">
+                  Hands-on workshop for DeFi trading strategies
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-6 text-sm text-muted-foreground">

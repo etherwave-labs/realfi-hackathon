@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Calendar03Icon, WalletAdd01Icon, Add01Icon, User02Icon } from "hugeicons-react"
+import { Calendar03Icon, WalletAdd01Icon, Add01Icon, UserIcon } from "hugeicons-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,13 +18,21 @@ export function Header() {
         <div className="mr-4 hidden md:flex">
           <Link className="mr-6 flex items-center space-x-2" href="/">
             <Calendar03Icon className="h-7 w-7 text-primary" />
-            <span className="hidden font-bold text-xl sm:inline-block text-gradient-primary">EventChain</span>
+            <span className="hidden font-bold text-xl sm:inline-block text-gradient-primary">
+              EventChain
+            </span>
           </Link>
           <nav className="flex items-center gap-6 text-sm lg:gap-8">
-            <Link className="transition-colors hover:text-primary text-foreground/80 font-medium" href="/events">
+            <Link
+              className="transition-colors hover:text-primary text-foreground/80 font-medium"
+              href="/events"
+            >
               Events
             </Link>
-            <Link className="transition-colors hover:text-primary text-foreground/80 font-medium" href="/organizer">
+            <Link
+              className="transition-colors hover:text-primary text-foreground/80 font-medium"
+              href="/organizer"
+            >
               For Organizers
             </Link>
           </nav>
@@ -40,7 +48,12 @@ export function Header() {
             </Button>
           </div>
           <nav className="flex items-center gap-3">
-            <Button variant="default" size="sm" className="gradient-primary rounded-2xl font-semibold" asChild>
+            <Button
+              variant="default"
+              size="sm"
+              className="gradient-primary rounded-2xl font-semibold"
+              asChild
+            >
               <Link href="/create">
                 <Add01Icon className="h-4 w-4 mr-2" />
                 Create Event
@@ -53,7 +66,7 @@ export function Header() {
                   size="sm"
                   className="rounded-2xl border-2 border-accent/20 hover:border-accent/40 hover:bg-accent/10 bg-transparent"
                 >
-                  <User02Icon className="h-4 w-4 mr-2" />
+                  <UserIcon className="h-4 w-4 mr-2" />
                   Account
                 </Button>
               </DropdownMenuTrigger>
@@ -70,7 +83,9 @@ export function Header() {
                   Wallet: 0x1234...5678
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="rounded-xl text-destructive">Disconnect Wallet</DropdownMenuItem>
+                <DropdownMenuItem className="rounded-xl text-destructive">
+                  Disconnect Wallet
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
