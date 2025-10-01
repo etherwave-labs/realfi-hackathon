@@ -6,6 +6,8 @@ export interface User {
   email?: string
   displayName?: string
   loginType?: string
+  username?: string
+  avatar?: string
 }
 
 interface AuthState {
@@ -18,6 +20,7 @@ interface AuthState {
   login: () => Promise<void>
   logout: () => Promise<void>
   getAccounts: () => Promise<string[]>
+  updateProfile: (username: string, avatar?: string) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -92,6 +95,11 @@ export const useAuthStore = create<AuthState>()(
           return []
         }
       },
+
+      updateProfile: (username, avatar) =>
+        set((state) => ({
+          user: state.user ? { ...state.user, username, avatar } : null,
+        })),
     }),
     {
       name: "eventchain-auth",

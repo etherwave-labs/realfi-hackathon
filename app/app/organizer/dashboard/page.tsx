@@ -2,84 +2,79 @@
 
 import { Separator } from "@/components/ui/separator"
 
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
-import { Calendar, Users, DollarSign, TrendingUp, Plus, Eye, Settings, BarChart3 } from "lucide-react"
+import { Calendar, Users, DollarSign, TrendingUp, Plus, Eye, Settings, BarChart3, QrCode } from "lucide-react"
 import Link from "next/link"
-
-// Mock organizer data
-const organizerStats = {
-  totalEvents: 12,
-  totalRevenue: 2450,
-  totalAttendees: 340,
-  averageAttendance: 85,
-}
-
-const organizerEvents = {
-  upcoming: [
-    {
-      id: 1,
-      title: "Web3 Developer Meetup",
-      date: "Dec 15, 2024",
-      time: "6:00 PM",
-      location: "San Francisco, CA",
-      registrations: 45,
-      capacity: 50,
-      revenue: 1125,
-      currency: "USDC",
-      status: "active",
-    },
-    {
-      id: 4,
-      title: "Blockchain Startup Pitch Night",
-      date: "Dec 22, 2024",
-      time: "6:30 PM",
-      location: "Austin, TX",
-      registrations: 23,
-      capacity: 75,
-      revenue: 345,
-      currency: "USDC",
-      status: "active",
-    },
-  ],
-  past: [
-    {
-      id: 2,
-      title: "DeFi Trading Workshop",
-      date: "Nov 20, 2024",
-      time: "2:00 PM",
-      location: "New York, NY",
-      registrations: 20,
-      capacity: 20,
-      attendance: 18,
-      revenue: 1000,
-      serviceFee: 100,
-      currency: "USDC",
-      status: "completed",
-    },
-    {
-      id: 3,
-      title: "NFT Art Gallery Opening",
-      date: "Nov 15, 2024",
-      time: "7:00 PM",
-      location: "Los Angeles, CA",
-      registrations: 100,
-      capacity: 100,
-      attendance: 82,
-      revenue: 3000,
-      serviceFee: 300,
-      currency: "USDC",
-      status: "completed",
-    },
-  ],
-}
+import { useAuthStore } from "@/lib/auth-store"
+import { useEventsStore, Event } from "@/lib/events-store"
+import { isEventPast } from "@/lib/event-utils"
+import { useRouter } from "next/navigation"
 
 export default function OrganizerDashboard() {
+  const { user } = useAuthStore()
+  const { events, registrations, getEventRegistrations } = useEventsStore()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/events")
+    }
+  }, [user, router])
+
+  const myEvents = useMemo(() => {
+    if (!user?.address) return []
+    return events.filter(
+      (event) =>
+        event.organizer.walletAddress?.toLowerCase() === user.address.toLowerCase()
+    )
+  }, [events, user])
+
+  const upcomingEvents = useMemo(() => {
+    return myEvents.filter((event) => !isEventPast(event))
+  }, [myEvents])
+
+  const pastEvents = useMemo(() => {
+    return myEvents.filter((event) => isEventPast(event))
+  }, [myEvents])
+
+  const organizerStats = useMemo(() => {
+    const totalEvents = myEvents.length
+    let totalRevenue = 0
+    let totalAttendees = 0
+    let totalCheckedIn = 0
+
+    myEvents.forEach((event) => {
+      const eventRegistrations = getEventRegistrations(event.id)
+      totalAttendees += eventRegistrations.length
+      
+      eventRegistrations.forEach((reg) => {
+        totalRevenue += reg.amount
+        if (reg.checkedIn) {
+          totalCheckedIn++
+        }
+      })
+    })
+
+    const averageAttendance =
+      totalAttendees > 0 ? Math.round((totalCheckedIn / totalAttendees) * 100) : 0
+
+    return {
+      totalEvents,
+      totalRevenue,
+      totalAttendees,
+      averageAttendance,
+    }
+  }, [myEvents, getEventRegistrations])
+
+  if (!user) {
+    return null
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -101,12 +96,20 @@ export default function OrganizerDashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Organizer Dashboard</h1>
           <p className="text-muted-foreground">Manage your events and track performance</p>
         </div>
-        <Button asChild>
-          <Link href="/create">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Event
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/organizer/scan">
+              <QrCode className="mr-2 h-4 w-4" />
+              Scan QR Codes
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/create">
+              <Plus className="mr-2 h-4 w-4" />
+              Create Event
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -126,7 +129,9 @@ export default function OrganizerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{organizerStats.totalEvents}</div>
-                <p className="text-xs text-muted-foreground">+2 from last month</p>
+                <p className="text-xs text-muted-foreground">
+                  {upcomingEvents.length} upcoming
+                </p>
               </CardContent>
             </Card>
             <Card>
@@ -135,8 +140,10 @@ export default function OrganizerDashboard() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">${organizerStats.totalRevenue}</div>
-                <p className="text-xs text-muted-foreground">+15% from last month</p>
+                <div className="text-2xl font-bold">
+                  {organizerStats.totalRevenue.toFixed(2)} USDC
+                </div>
+                <p className="text-xs text-muted-foreground">Total earnings</p>
               </CardContent>
             </Card>
             <Card>
@@ -146,7 +153,7 @@ export default function OrganizerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{organizerStats.totalAttendees}</div>
-                <p className="text-xs text-muted-foreground">+8% from last month</p>
+                <p className="text-xs text-muted-foreground">Total registrations</p>
               </CardContent>
             </Card>
             <Card>
@@ -156,7 +163,7 @@ export default function OrganizerDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{organizerStats.averageAttendance}%</div>
-                <p className="text-xs text-muted-foreground">+3% from last month</p>
+                <p className="text-xs text-muted-foreground">Check-in rate</p>
               </CardContent>
             </Card>
           </div>
@@ -168,152 +175,205 @@ export default function OrganizerDashboard() {
               <CardDescription>Your latest event activity</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[...organizerEvents.upcoming, ...organizerEvents.past.slice(0, 2)].map((event) => (
-                  <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{event.title}</h4>
-                        {getStatusBadge(event.status)}
+              {myEvents.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground mb-4">You haven't created any events yet</p>
+                  <Button asChild>
+                    <Link href="/create">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Your First Event
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myEvents.slice(0, 4).map((event) => {
+                    const eventRegs = getEventRegistrations(event.id)
+                    const revenue = eventRegs.reduce((sum, reg) => sum + reg.amount, 0)
+                    const isPast = isEventPast(event)
+                    
+                    return (
+                      <div key={event.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{event.title}</h4>
+                            {isPast ? (
+                              <Badge variant="secondary">Completed</Badge>
+                            ) : (
+                              <Badge variant="default">Active</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {event.date} • {event.location}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>
+                              {event.attendees}/{event.capacity} registered
+                            </span>
+                            <span>{revenue.toFixed(2)} USDC revenue</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/events/${event.id}`}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href="/organizer/scan">
+                              <QrCode className="h-4 w-4 mr-1" />
+                              Scan
+                            </Link>
+                          </Button>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {event.date} • {event.location}
-                      </p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>
-                          {event.registrations}/{event.capacity} registered
-                        </span>
-                        <span>${event.revenue} revenue</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/events/${event.id}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Link>
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4 mr-1" />
-                        Manage
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="events" className="space-y-6">
-          <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
-              <div className="space-y-4">
-                {organizerEvents.upcoming.map((event) => (
-                  <Card key={event.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-xl">{event.title}</CardTitle>
-                          <CardDescription>
-                            {event.date} at {event.time} • {event.location}
-                          </CardDescription>
-                        </div>
-                        {getStatusBadge(event.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>Registration Progress</span>
-                          <span>
-                            {event.registrations}/{event.capacity} (
-                            {Math.round((event.registrations / event.capacity) * 100)}%)
-                          </span>
-                        </div>
-                        <Progress value={(event.registrations / event.capacity) * 100} className="w-full" />
-
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Revenue: </span>
-                            <span className="font-medium">
-                              ${event.revenue} {event.currency}
-                            </span>
+              {upcomingEvents.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No upcoming events</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {upcomingEvents.map((event) => {
+                    const eventRegs = getEventRegistrations(event.id)
+                    const revenue = eventRegs.reduce((sum, reg) => sum + reg.amount, 0)
+                    
+                    return (
+                      <Card key={event.id}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-xl">{event.title}</CardTitle>
+                              <CardDescription>
+                                {event.date} at {event.time} • {event.location}
+                              </CardDescription>
+                            </div>
+                            <Badge variant="default">Active</Badge>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Spots Left: </span>
-                            <span className="font-medium">{event.capacity - event.registrations}</span>
-                          </div>
-                        </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>Registration Progress</span>
+                              <span>
+                                {event.attendees}/{event.capacity} (
+                                {Math.round((event.attendees / event.capacity) * 100)}%)
+                              </span>
+                            </div>
+                            <Progress value={(event.attendees / event.capacity) * 100} className="w-full" />
 
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/events/${event.id}`}>
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Event
-                            </Link>
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Settings className="h-4 w-4 mr-1" />
-                            Manage
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            Check-in
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Revenue: </span>
+                                <span className="font-medium">
+                                  {revenue.toFixed(2)} {event.currency}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Spots Left: </span>
+                                <span className="font-medium">{event.capacity - event.attendees}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href={`/events/${event.id}`}>
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  View Event
+                                </Link>
+                              </Button>
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href="/organizer/scan">
+                                  <QrCode className="h-4 w-4 mr-1" />
+                                  Check-in
+                                </Link>
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             <div>
               <h2 className="text-2xl font-bold mb-4">Past Events</h2>
-              <div className="space-y-4">
-                {organizerEvents.past.map((event) => (
-                  <Card key={event.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-xl">{event.title}</CardTitle>
-                          <CardDescription>
-                            {event.date} at {event.time} • {event.location}
-                          </CardDescription>
-                        </div>
-                        {getStatusBadge(event.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Registered: </span>
-                          <span className="font-medium">{event.registrations}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Attended: </span>
-                          <span className="font-medium">{event.attendance}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Attendance Rate: </span>
-                          <span className="font-medium">
-                            {Math.round((event.attendance! / event.registrations) * 100)}%
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Your Fee: </span>
-                          <span className="font-medium text-green-600">
-                            ${event.serviceFee} {event.currency}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {pastEvents.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No past events yet</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {pastEvents.map((event) => {
+                    const eventRegs = getEventRegistrations(event.id)
+                    const revenue = eventRegs.reduce((sum, reg) => sum + reg.amount, 0)
+                    const checkedInCount = eventRegs.filter((reg) => reg.checkedIn).length
+                    const attendanceRate =
+                      eventRegs.length > 0
+                        ? Math.round((checkedInCount / eventRegs.length) * 100)
+                        : 0
+                    
+                    return (
+                      <Card key={event.id}>
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-xl">{event.title}</CardTitle>
+                              <CardDescription>
+                                {event.date} at {event.time} • {event.location}
+                              </CardDescription>
+                            </div>
+                            <Badge variant="secondary">Completed</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">Registered: </span>
+                              <span className="font-medium">{eventRegs.length}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Checked In: </span>
+                              <span className="font-medium">{checkedInCount}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Attendance Rate: </span>
+                              <span className="font-medium">{attendanceRate}%</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Revenue: </span>
+                              <span className="font-medium text-green-600">
+                                {revenue.toFixed(2)} {event.currency}
+                              </span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
+                </div>
+              )}
             </div>
-          </div>
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">
@@ -322,13 +382,39 @@ export default function OrganizerDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <BarChart3 className="mr-2 h-5 w-5" />
-                  Revenue Trends
+                  Revenue Overview
                 </CardTitle>
-                <CardDescription>Monthly revenue over time</CardDescription>
+                <CardDescription>Total revenue from all events</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center bg-muted rounded-lg">
-                  <span className="text-muted-foreground">Revenue chart placeholder</span>
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <div className="text-4xl font-bold mb-2">
+                      {organizerStats.totalRevenue.toFixed(2)} USDC
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      From {organizerStats.totalAttendees} registrations
+                    </p>
+                  </div>
+                  {myEvents.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Average per event:</span>
+                        <span className="font-medium">
+                          {(organizerStats.totalRevenue / myEvents.length).toFixed(2)} USDC
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Average per attendee:</span>
+                        <span className="font-medium">
+                          {organizerStats.totalAttendees > 0
+                            ? (organizerStats.totalRevenue / organizerStats.totalAttendees).toFixed(2)
+                            : "0.00"}{" "}
+                          USDC
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -337,31 +423,32 @@ export default function OrganizerDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Users className="mr-2 h-5 w-5" />
-                  Attendance Rates
+                  Event Statistics
                 </CardTitle>
-                <CardDescription>Average attendance by event type</CardDescription>
+                <CardDescription>Your event performance</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Tech Meetups</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={88} className="w-20" />
-                      <span className="text-sm font-medium">88%</span>
-                    </div>
+                    <span className="text-sm">Total Events</span>
+                    <Badge variant="secondary">{organizerStats.totalEvents}</Badge>
                   </div>
+                  <Separator />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Workshops</span>
-                    <div className="flex items-center gap-2">
-                      <Progress value={92} className="w-20" />
-                      <span className="text-sm font-medium">92%</span>
-                    </div>
+                    <span className="text-sm">Upcoming Events</span>
+                    <Badge variant="default">{upcomingEvents.length}</Badge>
                   </div>
+                  <Separator />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Networking</span>
+                    <span className="text-sm">Past Events</span>
+                    <Badge variant="secondary">{pastEvents.length}</Badge>
+                  </div>
+                  <Separator />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Check-in Rate</span>
                     <div className="flex items-center gap-2">
-                      <Progress value={75} className="w-20" />
-                      <span className="text-sm font-medium">75%</span>
+                      <Progress value={organizerStats.averageAttendance} className="w-20" />
+                      <span className="text-sm font-medium">{organizerStats.averageAttendance}%</span>
                     </div>
                   </div>
                 </div>
@@ -370,44 +457,75 @@ export default function OrganizerDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Top Performing Events</CardTitle>
-                <CardDescription>Events with highest attendance rates</CardDescription>
+                <CardTitle>Top Events by Revenue</CardTitle>
+                <CardDescription>Your highest earning events</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {organizerEvents.past.map((event, index) => (
-                    <div key={event.id} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{event.title}</p>
-                        <p className="text-xs text-muted-foreground">{event.date}</p>
-                      </div>
-                      <Badge variant="secondary">{Math.round((event.attendance! / event.registrations) * 100)}%</Badge>
-                    </div>
-                  ))}
-                </div>
+                {myEvents.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No events yet
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {myEvents
+                      .map((event) => {
+                        const eventRegs = getEventRegistrations(event.id)
+                        const revenue = eventRegs.reduce((sum, reg) => sum + reg.amount, 0)
+                        return { event, revenue }
+                      })
+                      .sort((a, b) => b.revenue - a.revenue)
+                      .slice(0, 5)
+                      .map(({ event, revenue }) => (
+                        <div key={event.id} className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{event.title}</p>
+                            <p className="text-xs text-muted-foreground">{event.date}</p>
+                          </div>
+                          <Badge variant="secondary">{revenue.toFixed(2)} USDC</Badge>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Financial Summary</CardTitle>
-                <CardDescription>Your earnings breakdown</CardDescription>
+                <CardTitle>Registration Summary</CardTitle>
+                <CardDescription>Attendee statistics</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Service Fees</span>
-                    <span className="font-medium">$400 USDC</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Platform Fee (10%)</span>
-                    <span className="font-medium">-$40 USDC</span>
+                    <span className="text-sm text-muted-foreground">Total Registrations</span>
+                    <span className="font-medium">{organizerStats.totalAttendees}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between">
-                    <span className="font-medium">Net Earnings</span>
-                    <span className="font-bold text-green-600">$360 USDC</span>
+                    <span className="text-sm text-muted-foreground">Total Revenue</span>
+                    <span className="font-medium">{organizerStats.totalRevenue.toFixed(2)} USDC</span>
                   </div>
+                  <Separator />
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Average Check-in Rate</span>
+                    <span className="font-medium">{organizerStats.averageAttendance}%</span>
+                  </div>
+                  <Separator />
+                  {myEvents.length > 0 && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Avg. Capacity Fill</span>
+                        <span className="font-medium">
+                          {Math.round(
+                            (myEvents.reduce((sum, event) => sum + event.attendees, 0) /
+                              myEvents.reduce((sum, event) => sum + event.capacity, 0)) *
+                              100
+                          )}
+                          %
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -417,3 +535,4 @@ export default function OrganizerDashboard() {
     </div>
   )
 }
+

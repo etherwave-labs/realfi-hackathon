@@ -11,12 +11,21 @@ import { useEventsStore } from "@/lib/events-store"
 import { isEventPast } from "@/lib/event-utils"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { QRCodeModal } from "@/components/registration/qr-code-modal"
 
 export default function MyEventsPage() {
   const { user } = useAuthStore()
   const { events, registrations, getUserRegistrations } = useEventsStore()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("upcoming")
+  const [selectedQRCode, setSelectedQRCode] = useState<{
+    registrationId: string
+    eventId: string
+    eventTitle: string
+    eventDate: string
+    userAddress: string
+    transactionHash: string
+  } | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -146,7 +155,18 @@ export default function MyEventsPage() {
                     <Button variant="outline" size="sm" className="flex-1" asChild>
                       <Link href={`/events/${event!.id}`}>View Event</Link>
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedQRCode({
+                        registrationId: registration.id,
+                        eventId: event!.id,
+                        eventTitle: event!.title,
+                        eventDate: event!.date,
+                        userAddress: registration.userAddress,
+                        transactionHash: registration.transactionHash
+                      })}
+                    >
                       <QrCode className="mr-2 h-4 w-4" />
                       QR Code
                     </Button>
@@ -245,6 +265,19 @@ export default function MyEventsPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {selectedQRCode && (
+        <QRCodeModal
+          isOpen={true}
+          onClose={() => setSelectedQRCode(null)}
+          registrationId={selectedQRCode.registrationId}
+          eventId={selectedQRCode.eventId}
+          eventTitle={selectedQRCode.eventTitle}
+          eventDate={selectedQRCode.eventDate}
+          userAddress={selectedQRCode.userAddress}
+          transactionHash={selectedQRCode.transactionHash}
+        />
+      )}
     </div>
   )
 }

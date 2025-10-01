@@ -90,11 +90,33 @@ export function Header() {
                     size="sm"
                     className="rounded-2xl border-2 border-accent/20 hover:border-accent/40 hover:bg-accent/10 bg-transparent"
                   >
-                    <UserIcon className="h-4 w-4 mr-2" />
-                    Account
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.username || "Avatar"}
+                        className="h-5 w-5 rounded-full object-cover mr-2"
+                      />
+                    ) : (
+                      <UserIcon className="h-4 w-4 mr-2" />
+                    )}
+                    {user.username || "Account"}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-2xl border-2 border-border/50">
+                  {user.username && (
+                    <>
+                      <div className="px-2 py-1.5 text-sm font-semibold">
+                        {user.username}
+                      </div>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem asChild className="rounded-xl">
+                    <Link href="/profile">
+                      <UserIcon className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild className="rounded-xl">
                     <Link href="/wallet">
                       <WalletAdd01Icon className="h-4 w-4 mr-2 text-accent" />

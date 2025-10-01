@@ -1,3 +1,5 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,9 +12,23 @@ import {
   CheckmarkBadge03Icon,
   ZapIcon,
 } from "hugeicons-react"
-import { FeaturedEvents } from "@/components/events/featured-events"
+import { useEventsStore } from "@/lib/events-store"
+import { isEventPast } from "@/lib/event-utils"
+import { useMemo } from "react"
 
 export default function HomePage() {
+  const { events } = useEventsStore()
+
+  const upcomingEvents = useMemo(() => {
+    return events
+      .filter((event) => !isEventPast(event))
+      .sort((a, b) => {
+        const idA = parseInt(a.id, 10)
+        const idB = parseInt(b.id, 10)
+        return idB - idA
+      })
+      .slice(0, 3)
+  }, [events])
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -102,74 +118,58 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          <div className="mx-auto grid max-w-5xl items-center gap-8 py-16 lg:grid-cols-2 lg:gap-12">
-            <Card className="rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <Badge
-                    variant="secondary"
-                    className="rounded-2xl bg-accent/20 text-accent font-semibold"
-                  >
-                    Tech Meetup
-                  </Badge>
-                  <span className="text-lg font-bold text-primary">25 USDC</span>
-                </div>
-                <CardTitle className="text-2xl">Web3 Developer Meetup</CardTitle>
-                <CardDescription className="text-base">
-                  Learn about the latest in blockchain development
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <Calendar03Icon className="mr-2 h-4 w-4 text-accent" />
-                    Dec 15, 2024
-                  </div>
-                  <div className="flex items-center">
-                    <Location01Icon className="mr-2 h-4 w-4 text-accent" />
-                    San Francisco
-                  </div>
-                  <div className="flex items-center">
-                    <UserGroupIcon className="mr-2 h-4 w-4 text-accent" />
-                    45/50
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
-                  <Badge
-                    variant="secondary"
-                    className="rounded-2xl bg-chart-4/20 text-chart-4 font-semibold"
-                  >
-                    Workshop
-                  </Badge>
-                  <span className="text-lg font-bold text-primary">50 USDC</span>
-                </div>
-                <CardTitle className="text-2xl">DeFi Trading Workshop</CardTitle>
-                <CardDescription className="text-base">
-                  Hands-on workshop for DeFi trading strategies
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                  <div className="flex items-center">
-                    <Calendar03Icon className="mr-2 h-4 w-4 text-chart-4" />
-                    Dec 18, 2024
-                  </div>
-                  <div className="flex items-center">
-                    <Location01Icon className="mr-2 h-4 w-4 text-chart-4" />
-                    New York
-                  </div>
-                  <div className="flex items-center">
-                    <UserGroupIcon className="mr-2 h-4 w-4 text-chart-4" />
-                    12/20
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {upcomingEvents.length > 0 ? (
+            <div className={`mx-auto grid max-w-5xl items-center gap-8 py-16 ${upcomingEvents.length === 1 ? 'lg:grid-cols-1 max-w-2xl' : upcomingEvents.length === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-2 xl:grid-cols-3'} lg:gap-12`}>
+              {upcomingEvents.map((event) => (
+                <Link href={`/events/${event.id}`} key={event.id}>
+                  <Card className="rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl cursor-pointer h-full">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
+                        <Badge
+                          variant="secondary"
+                          className="rounded-2xl bg-accent/20 text-accent font-semibold"
+                        >
+                          {event.category}
+                        </Badge>
+                        <span className="text-lg font-bold text-primary">
+                          {event.price} {event.currency}
+                        </span>
+                      </div>
+                      <CardTitle className="text-2xl line-clamp-2">{event.title}</CardTitle>
+                      <CardDescription className="text-base line-clamp-2">
+                        {event.description}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center">
+                          <Calendar03Icon className="mr-2 h-4 w-4 text-accent" />
+                          {event.date}
+                        </div>
+                        <div className="flex items-center">
+                          <Location01Icon className="mr-2 h-4 w-4 text-accent" />
+                          {event.location.split(",")[0]}
+                        </div>
+                        <div className="flex items-center">
+                          <UserGroupIcon className="mr-2 h-4 w-4 text-accent" />
+                          {event.attendees}/{event.capacity}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="py-16 text-center">
+              <p className="text-muted-foreground text-lg">
+                No upcoming events yet. Be the first to create one!
+              </p>
+              <Button asChild className="gradient-primary rounded-2xl text-lg px-8 py-6 font-semibold mt-6">
+                <Link href="/create">Create Event</Link>
+              </Button>
+            </div>
+          )}
           <div className="flex justify-center">
             <Button asChild className="gradient-accent rounded-2xl text-lg px-8 py-6 font-semibold">
               <Link href="/events">View All Events</Link>

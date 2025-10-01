@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { useAuthStore } from "@/lib/auth-store"
 import { getUSDCBalance, getEthereumProvider } from "@/lib/payment-service"
-import { Copy, Check, ExternalLink, RefreshCw, Wallet as WalletIcon } from "lucide-react"
+import { switchToArbitrumSepolia } from "@/lib/network-utils"
+import { Copy, Check, ExternalLink, RefreshCw, Wallet as WalletIcon, Network } from "lucide-react"
 import { QRCodeSVG } from "qrcode.react"
 import Link from "next/link"
 import { ethers } from "ethers"
@@ -19,6 +20,8 @@ export default function WalletPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isCopied, setIsCopied] = useState(false)
   const [networkName, setNetworkName] = useState<string>("Unknown")
+  const [chainId, setChainId] = useState<number | null>(null)
+  const [isSwitchingNetwork, setIsSwitchingNetwork] = useState(false)
 
   const loadBalances = async () => {
     if (!user?.address) return
@@ -37,7 +40,19 @@ export default function WalletPage() {
 
         // Obtenir le nom du réseau
         const network = await provider.getNetwork()
-        setNetworkName(network.name || `Chain ID: ${network.chainId}`)
+        const currentChainId = Number(network.chainId)
+        setChainId(currentChainId)
+        
+        // Déterminer le nom du réseau
+        if (currentChainId === 11155111) {
+          setNetworkName("Ethereum Sepolia")
+        } else if (currentChainId === 10) {
+          setNetworkName("Optimism")
+        } else if (currentChainId === 1) {
+          setNetworkName("Ethereum Mainnet")
+        } else {
+          setNetworkName(`Chain ID: ${currentChainId}`)
+        }
       }
     } catch (error) {
       console.error("Error loading balances:", error)
@@ -55,6 +70,22 @@ export default function WalletPage() {
       await navigator.clipboard.writeText(user.address)
       setIsCopied(true)
       setTimeout(() => setIsCopied(false), 2000)
+    }
+  }
+
+  const handleSwitchToSepolia = async () => {
+    setIsSwitchingNetwork(true)
+    try {
+      await switchToArbitrumSepolia()
+      // Wait a bit for network to switch
+      setTimeout(() => {
+        loadBalances()
+      }, 1000)
+    } catch (error) {
+      console.error("Failed to switch network:", error)
+      alert("Failed to switch network. Please try manually switching in your wallet.")
+    } finally {
+      setIsSwitchingNetwork(false)
     }
   }
 
@@ -140,10 +171,30 @@ export default function WalletPage() {
             <p className="text-xs text-center text-muted-foreground">
               Scan this QR code to send funds to this wallet
             </p>
-            <div className="flex items-center justify-center gap-2">
-              <Badge variant="outline" className="text-xs">
+            <div className="flex flex-col items-center gap-3">
+              <Badge 
+                variant={chainId === 11155111 ? "default" : "destructive"} 
+                className="text-xs"
+              >
+                <Network className="h-3 w-3 mr-1" />
                 {networkName}
               </Badge>
+              {chainId !== 11155111 && (
+                <Button
+                  onClick={handleSwitchToSepolia}
+                  disabled={isSwitchingNetwork}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Network className="h-4 w-4 mr-2" />
+                  {isSwitchingNetwork ? "Switching..." : "Switch to Ethereum Sepolia"}
+                </Button>
+              )}
+              {chainId === 11155111 && (
+                <p className="text-xs text-green-600 font-medium">
+                  ✓ Connected to the correct network
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

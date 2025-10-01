@@ -1,7 +1,7 @@
 "use client"
 
 import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { supabase } from "./supabase"
 
 const DEFAULT_EVENT_IMAGE = "/media/template.png"
 
@@ -60,6 +60,8 @@ type EventsState = {
   registerForEvent: (eventId: string, userAddress: string, transactionHash: string, amount: number, currency: string) => string
   isUserRegistered: (eventId: string, userAddress: string) => boolean
   getUserRegistrations: (userAddress: string) => Registration[]
+  checkInUser: (registrationId: string) => void
+  getEventRegistrations: (eventId: string) => Registration[]
 }
 
 const sanitizeImage = (image?: string): string => {
@@ -92,11 +94,9 @@ const getNextEventId = (events: Event[]): string => {
   return `${maxId + 1}`
 }
 
-export const useEventsStore = create<EventsState>()(
-  persist(
-    (set, get) => ({
-      events: initialEvents,
-      registrations: [],
+export const useEventsStore = create<EventsState>()((set, get) => ({
+  events: initialEvents,
+  registrations: [],
       addEvent: (eventInput) => {
         const currentEvents = get().events
         const id = getNextEventId(currentEvents)
@@ -108,10 +108,69 @@ export const useEventsStore = create<EventsState>()(
             name: "Community Organizer",
           },
         } as Event)
+        
+        const supabaseEvent = {
+          id: newEvent.id,
+          title: newEvent.title || '',
+          description: newEvent.description || null,
+          category: newEvent.category || null,
+          date: newEvent.date || null,
+          time: newEvent.time || null,
+          location: newEvent.location || null,
+          price: newEvent.price || 0,
+          currency: newEvent.currency || 'USDC',
+          attendees: newEvent.attendees || 0,
+          capacity: newEvent.capacity || 0,
+          organizer: JSON.stringify(newEvent.organizer),
+          image: newEvent.image || null,
+          tags: newEvent.tags && newEvent.tags.length > 0 ? newEvent.tags : null,
+          refundpolicy: newEvent.refundPolicy || null,
+          requirements: newEvent.requirements || null,
+          startdatetime: newEvent.startDateTime || null,
+          enddatetime: newEvent.endDateTime || null,
+          ispublic: newEvent.isPublic !== false,
+          allowwaitlist: newEvent.allowWaitlist === true,
+          noshowpayoutpercentage: newEvent.noShowPayoutPercentage || 0
+        }
+        
+        supabase
+          .from('events')
+          .insert([supabaseEvent])
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error inserting event:', error)
+              console.error('Event data:', supabaseEvent)
+            } else {
+              console.log('Event successfully inserted into Supabase!')
+            }
+          })
+        
         set((state) => ({ events: [newEvent, ...state.events] }))
         return id
       },
       updateEvent: (id, changes) => {
+        supabase
+          .from('events')
+          .update({
+            title: changes.title,
+            description: changes.description,
+            category: changes.category,
+            date: changes.date,
+            time: changes.time,
+            location: changes.location,
+            price: changes.price,
+            currency: changes.currency,
+            attendees: changes.attendees,
+            capacity: changes.capacity,
+            organizer: changes.organizer ? JSON.stringify(changes.organizer) : undefined,
+            image: changes.image,
+            tags: changes.tags,
+          })
+          .eq('id', id)
+          .then(({ error }) => {
+            if (error) console.error('Error updating event:', error)
+          })
+        
         set((state) => ({
           events: state.events.map((event) =>
             event.id === id ? normalizeEvent({ ...event, ...changes, id: event.id }) : event,
@@ -133,6 +192,40 @@ export const useEventsStore = create<EventsState>()(
           currency,
           registeredAt: new Date().toISOString(),
           checkedIn: false,
+        }
+        
+        const supabaseRegistration = {
+          id: newRegistration.id,
+          event_id: newRegistration.eventId,
+          user_address: newRegistration.userAddress,
+          transaction_hash: newRegistration.transactionHash,
+          amount: newRegistration.amount,
+          currency: newRegistration.currency,
+          registered_at: newRegistration.registeredAt,
+          checked_in: newRegistration.checkedIn
+        }
+        
+        supabase
+          .from('registrations')
+          .insert([supabaseRegistration])
+          .then(({ error }) => {
+            if (error) {
+              console.error('Error inserting registration:', error)
+              console.error('Registration data:', supabaseRegistration)
+            } else {
+              console.log('Registration successfully inserted into Supabase!')
+            }
+          })
+        
+        const currentEvent = get().events.find((e) => e.id === eventId)
+        if (currentEvent) {
+          supabase
+            .from('events')
+            .update({ attendees: currentEvent.attendees + 1 })
+            .eq('id', eventId)
+            .then(({ error }) => {
+              if (error) console.error('Error updating attendees:', error)
+            })
         }
         
         set((state) => ({
@@ -160,21 +253,24 @@ export const useEventsStore = create<EventsState>()(
           (reg) => reg.userAddress === normalizedAddress
         )
       },
-    }),
-    {
-      name: "eventchain-events",
-      storage: createJSONStorage(() => localStorage),
-      version: 5,
-      migrate: (persistedState: any) => {
-        return { 
-          events: [],
-          registrations: []
-        }
+      checkInUser: (registrationId) => {
+        supabase
+          .from('registrations')
+          .update({ checked_in: true })
+          .eq('id', registrationId)
+          .then(({ error }) => {
+            if (error) console.error('Error checking in user:', error)
+          })
+        
+        set((state) => ({
+          registrations: state.registrations.map((reg) =>
+            reg.id === registrationId
+              ? { ...reg, checkedIn: true }
+              : reg
+          ),
+        }))
       },
-      partialize: (state) => ({ 
-        events: state.events,
-        registrations: state.registrations 
-      }),
-    },
-  ),
-)
+      getEventRegistrations: (eventId) => {
+        return get().registrations.filter((reg) => reg.eventId === eventId)
+      },
+}))

@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { HumanWalletProvider } from "@/components/providers/human-wallet-provider"
+import { StorageSyncProvider } from "@/components/providers/storage-sync-provider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,8 +21,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} antialiased`}>
       <body className="min-h-screen bg-background font-sans w-full">
         <HumanWalletProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
+          <StorageSyncProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+          </StorageSyncProvider>
         </HumanWalletProvider>
       </body>
     </html>
