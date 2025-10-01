@@ -15,6 +15,9 @@ import { Separator } from "@/components/ui/separator"
 import { Calendar, MapPin, Users, DollarSign, Clock, ArrowLeft, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useEvents } from "@/components/ui/use-events"
+import { useAuthStore } from "@/lib/auth-store"
+import type { NewEventInput } from "@/lib/events-store"
 
 const categories = [
   "Tech Meetup",
@@ -34,11 +37,45 @@ const currencies = [
   { symbol: "DAI", name: "Dai Stablecoin" },
 ]
 
+const DEFAULT_EVENT_IMAGE = "/media/template.png"
+
+function formatTime(startTime: string, endTime?: string) {
+  const toDisplay = (time: string) => time
+  if (!endTime) {
+    return toDisplay(startTime)
+  }
+  return `${toDisplay(startTime)} - ${toDisplay(endTime)}`
+}
+
 export default function CreateEventPage() {
   const router = useRouter()
+  const { user } = useAuthStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
+  const { addEvent } = useEvents()
+
+  // Si l'utilisateur n'est pas connecté, rediriger
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Wallet Not Connected</CardTitle>
+            <CardDescription>Please connect your wallet to create an event</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              You need to connect your wallet to create an event and receive payments.
+            </p>
+            <Button asChild className="w-full">
+              <Link href="/">Go to Home Page</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   const [formData, setFormData] = useState({
     title: "",
@@ -55,6 +92,8 @@ export default function CreateEventPage() {
     requirements: "",
     isPublic: true,
     allowWaitlist: true,
+    image: DEFAULT_EVENT_IMAGE,
+    noShowPayoutPercentage: "20",
   })
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -76,14 +115,57 @@ export default function CreateEventPage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate event creation
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    const payoutPercentage = Number(formData.noShowPayoutPercentage)
+    const registrationFee = Number(formData.registrationFee)
 
-    // In real app, this would create the event via smart contract
-    console.log("Creating event:", { ...formData, tags })
+    if (Number.isNaN(payoutPercentage) || payoutPercentage < 0 || payoutPercentage > 100) {
+      setIsSubmitting(false)
+      return
+    }
+
+    if (Number.isNaN(registrationFee) || registrationFee < 0) {
+      setIsSubmitting(false)
+      return
+    }
+
+    const startDateTime = formData.date && formData.startTime ? `${formData.date}T${formData.startTime}` : undefined
+    const endDateTime = formData.date && formData.endTime ? `${formData.date}T${formData.endTime}` : undefined
+
+    const newEvent: NewEventInput = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
+      date: new Date(formData.date).toLocaleDateString("fr-FR", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      time: formData.startTime ? formatTime(formData.startTime, formData.endTime) : "",
+      location: formData.location,
+      price: Number(formData.registrationFee),
+      currency: formData.currency,
+      attendees: 0,
+      capacity: Number(formData.capacity),
+      organizer: {
+        name: "Community Organizer",
+        verified: true,
+        walletAddress: user?.address, // Utilise l'adresse du wallet connecté
+      },
+      image: formData.image || DEFAULT_EVENT_IMAGE,
+      tags,
+      refundPolicy: formData.refundPolicy,
+      requirements: formData.requirements,
+      startDateTime,
+      endDateTime,
+      isPublic: formData.isPublic,
+      allowWaitlist: formData.allowWaitlist,
+      noShowPayoutPercentage: payoutPercentage,
+    }
+
+    const eventId = addEvent(newEvent)
 
     setIsSubmitting(false)
-    router.push("/organizer/dashboard")
+    router.push(`/events/${eventId}`)
   }
 
   const isFormValid = () => {
@@ -290,7 +372,7 @@ export default function CreateEventPage() {
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label>Allow Waitlist</Label>
-                      <p className="text-sm text-muted-foreground">Let people join a waitlist when event is full</p>
+                      <p className="text-sm text-muted-foreground">Let people join a waitlist when the event is full</p>
                     </div>
                     <Switch
                       checked={formData.allowWaitlist}
@@ -304,6 +386,66 @@ export default function CreateEventPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <DollarSign className="mr-2 h-5 w-5" />
+                  No-show payout
+                </CardTitle>
+                <CardDescription>Choose how much of the no-show pool is paid to attendees</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="registrationFee">Registration Fee *</Label>
+                    <Input
+                      id="registrationFee"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="25.00"
+                      value={formData.registrationFee}
+                      onChange={(e) => handleInputChange("registrationFee", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Select value={formData.currency} onValueChange={(value) => handleInputChange("currency", value)}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem key={currency.symbol} value={currency.symbol}>
+                          {currency.symbol}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Set the registration price attendees lock in when they register.
+                </p>
+                <div className="flex items-end gap-2 mt-4">
+                  <div className="flex-1">
+                    <Label htmlFor="noShowPayoutPercentage">Max bonus share *</Label>
+                    <Input
+                      id="noShowPayoutPercentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="1"
+                      value={formData.noShowPayoutPercentage}
+                      onChange={(e) => handleInputChange("noShowPayoutPercentage", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <span className="pb-2 text-muted-foreground">%</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Attendees can claim up to this percentage of the no-show deposit pool; you’ll keep the rest.
+                </p>
+              </CardContent>
+            </Card>
             {/* Capacity & Pricing */}
             <Card>
               <CardHeader>
@@ -325,37 +467,6 @@ export default function CreateEventPage() {
                     onChange={(e) => handleInputChange("capacity", e.target.value)}
                     required
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="registrationFee">Registration Fee *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="registrationFee"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="25.00"
-                      value={formData.registrationFee}
-                      onChange={(e) => handleInputChange("registrationFee", e.target.value)}
-                      required
-                    />
-                    <Select value={formData.currency} onValueChange={(value) => handleInputChange("currency", value)}>
-                      <SelectTrigger className="w-24">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {currencies.map((currency) => (
-                          <SelectItem key={currency.symbol} value={currency.symbol}>
-                            {currency.symbol}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Attendees pay this amount to register. They get it back + bonus if they attend.
-                  </p>
                 </div>
               </CardContent>
             </Card>

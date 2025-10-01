@@ -10,8 +10,31 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuthStore } from "@/lib/auth-store"
 
 export function Header() {
+  const { user, isConnecting, login, logout } = useAuthStore()
+
+  const handleConnect = async () => {
+    try {
+      await login()
+    } catch (error) {
+      console.error("Connection failed:", error)
+    }
+  }
+
+  const handleDisconnect = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error("Disconnect failed:", error)
+    }
+  }
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gradient bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center px-4">
@@ -59,35 +82,56 @@ export function Header() {
                 Create Event
               </Link>
             </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-2xl border-2 border-accent/20 hover:border-accent/40 hover:bg-accent/10 bg-transparent"
-                >
-                  <UserIcon className="h-4 w-4 mr-2" />
-                  Account
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="rounded-2xl border-2 border-border/50">
-                <DropdownMenuItem asChild className="rounded-xl">
-                  <Link href="/my-events">My Events</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-xl">
-                  <Link href="/organizer/dashboard">Organizer Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="rounded-xl">
-                  <WalletAdd01Icon className="h-4 w-4 mr-2 text-accent" />
-                  Wallet: 0x1234...5678
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="rounded-xl text-destructive">
-                  Disconnect Wallet
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-2xl border-2 border-accent/20 hover:border-accent/40 hover:bg-accent/10 bg-transparent"
+                  >
+                    <UserIcon className="h-4 w-4 mr-2" />
+                    Account
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="rounded-2xl border-2 border-border/50">
+                  <DropdownMenuItem asChild className="rounded-xl">
+                    <Link href="/wallet">
+                      <WalletAdd01Icon className="h-4 w-4 mr-2 text-accent" />
+                      My Wallet
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="rounded-xl">
+                    <Link href="/my-events">My Events</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-xl">
+                    <Link href="/organizer/dashboard">Organizer Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="rounded-xl" disabled>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {formatAddress(user.address)}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="rounded-xl text-destructive" onClick={handleDisconnect}>
+                    Disconnect Wallet
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-2xl border-2 border-accent/20 hover:border-accent/40 hover:bg-accent/10 bg-transparent"
+                onClick={handleConnect}
+                disabled={isConnecting}
+              >
+                <WalletAdd01Icon className="h-4 w-4 mr-2" />
+                {isConnecting ? "Connecting..." : "Connect Wallet"}
+              </Button>
+            )}
           </nav>
         </div>
       </div>

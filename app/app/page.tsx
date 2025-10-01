@@ -10,6 +10,7 @@ import {
   CheckmarkBadge03Icon,
   ZapIcon,
 } from "hugeicons-react"
+import { FeaturedEvents } from "@/components/events/featured-events"
 
 export default function HomePage() {
   return (

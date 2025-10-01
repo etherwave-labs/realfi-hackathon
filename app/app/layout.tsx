@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/layout/header"
+import { HumanWalletProvider } from "@/components/providers/human-wallet-provider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -18,8 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} antialiased`}>
       <body className="min-h-screen bg-background font-sans w-full">
-        <Header />
-        <main className="flex-1">{children}</main>
+        <HumanWalletProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+        </HumanWalletProvider>
       </body>
     </html>
   )

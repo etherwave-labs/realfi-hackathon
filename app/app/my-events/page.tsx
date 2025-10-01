@@ -1,110 +1,95 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, MapPin, QrCode, Clock, CheckCircle, XCircle } from "lucide-react"
+import { Calendar, MapPin, QrCode, Clock, CheckCircle, XCircle, Wallet } from "lucide-react"
 import Link from "next/link"
-
-// Mock user events data
-const userEvents = {
-  upcoming: [
-    {
-      id: 1,
-      title: "Web3 Developer Meetup",
-      date: "Dec 15, 2024",
-      time: "6:00 PM",
-      location: "San Francisco, CA",
-      status: "registered",
-      registrationId: "REG-2024-001",
-      paidAmount: 25,
-      currency: "USDC",
-      qrCode: "QR123456",
-    },
-  ],
-  past: [
-    {
-      id: 2,
-      title: "DeFi Trading Workshop",
-      date: "Nov 20, 2024",
-      time: "2:00 PM",
-      location: "New York, NY",
-      status: "attended",
-      registrationId: "REG-2024-002",
-      paidAmount: 50,
-      currency: "USDC",
-      refundAmount: 60, // 50 + 20% bonus
-      qrCode: "QR789012",
-    },
-    {
-      id: 3,
-      title: "NFT Art Gallery Opening",
-      date: "Nov 15, 2024",
-      time: "7:00 PM",
-      location: "Los Angeles, CA",
-      status: "no-show",
-      registrationId: "REG-2024-003",
-      paidAmount: 30,
-      currency: "USDC",
-      qrCode: "QR345678",
-    },
-  ],
-}
+import { useAuthStore } from "@/lib/auth-store"
+import { useEventsStore } from "@/lib/events-store"
+import { isEventPast } from "@/lib/event-utils"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 
 export default function MyEventsPage() {
+  const { user } = useAuthStore()
+  const { events, registrations, getUserRegistrations } = useEventsStore()
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("upcoming")
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "registered":
-        return <Badge variant="default">Registered</Badge>
-      case "attended":
-        return (
-          <Badge variant="secondary" className="bg-green-100 text-green-800">
-            Attended
-          </Badge>
-        )
-      case "no-show":
-        return <Badge variant="destructive">No Show</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  useEffect(() => {
+    if (!user) {
+      router.push("/events")
     }
+  }, [user, router])
+
+  if (!user) {
+    return null
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "attended":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case "no-show":
-        return <XCircle className="h-4 w-4 text-red-600" />
-      default:
-        return <Clock className="h-4 w-4 text-blue-600" />
+  const userRegistrations = getUserRegistrations(user.address)
+  
+  const userEventsWithDetails = userRegistrations.map((registration) => {
+    const event = events.find((e) => e.id === registration.eventId)
+    return {
+      registration,
+      event,
     }
+  }).filter((item) => item.event)
+
+  const upcomingEvents = userEventsWithDetails.filter((item) => !isEventPast(item.event!))
+  const pastEvents = userEventsWithDetails.filter((item) => isEventPast(item.event!))
+
+  const getStatusBadge = (isPast: boolean, checkedIn: boolean) => {
+    if (!isPast) {
+      return <Badge variant="default">Registered</Badge>
+    }
+    if (checkedIn) {
+      return (
+        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+          Attended
+        </Badge>
+      )
+    }
+    return <Badge variant="destructive">No Show</Badge>
+  }
+
+  const getStatusIcon = (isPast: boolean, checkedIn: boolean) => {
+    if (!isPast) {
+      return <Clock className="h-4 w-4 text-blue-600" />
+    }
+    if (checkedIn) {
+      return <CheckCircle className="h-4 w-4 text-green-600" />
+    }
+    return <XCircle className="h-4 w-4 text-red-600" />
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">My Events</h1>
-        <p className="text-muted-foreground">Manage your event registrations and view your history</p>
+        <p className="text-muted-foreground">Manage your registrations and view your history</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="upcoming">Upcoming ({userEvents.upcoming.length})</TabsTrigger>
-          <TabsTrigger value="past">Past Events ({userEvents.past.length})</TabsTrigger>
+          <TabsTrigger value="upcoming">
+            Upcoming ({upcomingEvents.length})
+          </TabsTrigger>
+          <TabsTrigger value="past">
+            Past ({pastEvents.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="upcoming" className="space-y-4">
-          {userEvents.upcoming.length === 0 ? (
+          {upcomingEvents.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No upcoming events</h3>
                 <p className="text-muted-foreground text-center mb-4">
-                  You haven't registered for any upcoming events yet.
+                  You haven't registered for any events yet.
                 </p>
                 <Button asChild>
                   <Link href="/events">Browse Events</Link>
@@ -112,45 +97,59 @@ export default function MyEventsPage() {
               </CardContent>
             </Card>
           ) : (
-            userEvents.upcoming.map((event) => (
-              <Card key={event.id}>
+            upcomingEvents.map(({ registration, event }) => (
+              <Card key={registration.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-xl">{event.title}</CardTitle>
-                      <CardDescription className="mt-1">Registration ID: {event.registrationId}</CardDescription>
+                      <CardTitle className="text-xl">{event!.title}</CardTitle>
+                      <CardDescription className="mt-1">
+                        ID: {registration.id}
+                      </CardDescription>
                     </div>
-                    {getStatusBadge(event.status)}
+                    {getStatusBadge(false, registration.checkedIn)}
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center">
                       <Calendar className="mr-2 h-4 w-4" />
-                      {event.date} at {event.time}
+                      {event!.date} at {event!.time}
                     </div>
                     <div className="flex items-center">
                       <MapPin className="mr-2 h-4 w-4" />
-                      {event.location}
+                      {event!.location}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm">
-                      <span className="text-muted-foreground">Paid: </span>
-                      <span className="font-medium">
-                        {event.paidAmount} {event.currency}
+                  <div className="bg-muted/50 p-3 rounded-lg mb-4 text-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-muted-foreground">Amount paid:</span>
+                      <span className="font-semibold">
+                        {registration.amount} {registration.currency}
                       </span>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <QrCode className="mr-2 h-4 w-4" />
-                        Show QR Code
-                      </Button>
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/events/${event.id}`}>View Event</Link>
-                      </Button>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Transaction:</span>
+                      <a
+                        href={`https://sepolia.etherscan.io/tx/${registration.transactionHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline text-xs font-mono"
+                      >
+                        {registration.transactionHash.slice(0, 6)}...{registration.transactionHash.slice(-4)}
+                      </a>
                     </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                      <Link href={`/events/${event!.id}`}>View Event</Link>
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <QrCode className="mr-2 h-4 w-4" />
+                      QR Code
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -159,59 +158,91 @@ export default function MyEventsPage() {
         </TabsContent>
 
         <TabsContent value="past" className="space-y-4">
-          {userEvents.past.map((event) => (
-            <Card key={event.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      {event.title}
-                      {getStatusIcon(event.status)}
-                    </CardTitle>
-                    <CardDescription className="mt-1">Registration ID: {event.registrationId}</CardDescription>
-                  </div>
-                  {getStatusBadge(event.status)}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {event.date} at {event.time}
-                  </div>
-                  <div className="flex items-center">
-                    <MapPin className="mr-2 h-4 w-4" />
-                    {event.location}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="text-sm space-y-1">
-                    <div>
-                      <span className="text-muted-foreground">Paid: </span>
-                      <span className="font-medium">
-                        {event.paidAmount} {event.currency}
-                      </span>
-                    </div>
-                    {event.status === "attended" && event.refundAmount && (
-                      <div className="text-green-600">
-                        <span className="text-muted-foreground">Refund + Bonus: </span>
-                        <span className="font-medium">
-                          +{event.refundAmount} {event.currency}
-                        </span>
-                      </div>
-                    )}
-                    {event.status === "no-show" && (
-                      <div className="text-red-600 text-xs">No refund - contributed to attendee bonus pool</div>
-                    )}
-                  </div>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/events/${event.id}`}>View Event</Link>
-                  </Button>
-                </div>
+          {pastEvents.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No past events</h3>
+                <p className="text-muted-foreground text-center mb-4">
+                  You haven't attended any events yet.
+                </p>
+                <Button asChild>
+                  <Link href="/events">Browse Events</Link>
+                </Button>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            pastEvents.map(({ registration, event }) => {
+              const isPast = isEventPast(event!)
+              return (
+                <Card key={registration.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-xl flex items-center gap-2">
+                          {event!.title}
+                          {getStatusIcon(isPast, registration.checkedIn)}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          ID: {registration.id}
+                        </CardDescription>
+                      </div>
+                      {getStatusBadge(isPast, registration.checkedIn)}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3 sm:grid-cols-2 text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {event!.date} at {event!.time}
+                      </div>
+                      <div className="flex items-center">
+                        <MapPin className="mr-2 h-4 w-4" />
+                        {event!.location}
+                      </div>
+                    </div>
+
+                    <div className="bg-muted/50 p-3 rounded-lg mb-4 text-sm space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Amount paid:</span>
+                        <span className="font-semibold">
+                          {registration.amount} {registration.currency}
+                        </span>
+                      </div>
+                      {registration.checkedIn && (
+                        <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                          <span>Refund + Bonus:</span>
+                          <span className="font-semibold">
+                            +{(registration.amount * 1.2).toFixed(2)} {registration.currency}
+                          </span>
+                        </div>
+                      )}
+                      {!registration.checkedIn && isPast && (
+                        <div className="text-red-600 dark:text-red-400 text-xs">
+                          No refund - Contributed to attendee bonus pool
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between pt-1 border-t">
+                        <span className="text-muted-foreground">Transaction:</span>
+                        <a
+                          href={`https://sepolia.etherscan.io/tx/${registration.transactionHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-xs font-mono"
+                        >
+                          {registration.transactionHash.slice(0, 6)}...{registration.transactionHash.slice(-4)}
+                        </a>
+                      </div>
+                    </div>
+
+                    <Button variant="outline" size="sm" className="w-full" asChild>
+                      <Link href={`/events/${event!.id}`}>View Event</Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
         </TabsContent>
       </Tabs>
     </div>
