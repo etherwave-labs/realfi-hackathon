@@ -9,7 +9,7 @@ interface HumanWalletProviderProps {
 }
 
 export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
-  const { setIsInitialized, setUser } = useAuthStore()
+  const { setIsInitialized, setUser, user } = useAuthStore()
 
   useEffect(() => {
     const initWallet = async () => {
@@ -22,7 +22,11 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
           try {
             const accounts = await window.silk.request({ method: "eth_accounts" })
             if (accounts && accounts.length > 0) {
-              setUser({ address: accounts[0] })
+              // Préserver le profil si c'est le même utilisateur
+              const preservedProfile = user && user.address === accounts[0]
+                ? { username: user.username, avatar: user.avatar }
+                : {}
+              setUser({ address: accounts[0], ...preservedProfile })
             }
           } catch (error) {
             // Session non trouvée, c'est normal
@@ -51,8 +55,14 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
             // @ts-ignore
             const accounts = await window.silk.request({ method: "eth_accounts" })
             if (accounts && accounts.length > 0) {
+              // Préserver le profil si c'est le même utilisateur
+              const currentUser = useAuthStore.getState().user
+              const preservedProfile = currentUser && currentUser.address === accounts[0]
+                ? { username: currentUser.username, avatar: currentUser.avatar }
+                : {}
               setUser({
                 address: accounts[0],
+                ...preservedProfile,
               })
             }
           } catch (error) {
@@ -63,8 +73,14 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
           // @ts-ignore
           window.silk.on("accountsChanged", (accounts: string[]) => {
             if (accounts.length > 0) {
+              // Préserver le profil si c'est le même utilisateur
+              const currentUser = useAuthStore.getState().user
+              const preservedProfile = currentUser && currentUser.address === accounts[0]
+                ? { username: currentUser.username, avatar: currentUser.avatar }
+                : {}
               setUser({
                 address: accounts[0],
+                ...preservedProfile,
               })
             } else {
               setUser(null)
@@ -84,7 +100,7 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
     }
 
     initWallet()
-  }, [setIsInitialized, setUser])
+  }, [setIsInitialized, setUser, user])
 
   return <>{children}</>
 }

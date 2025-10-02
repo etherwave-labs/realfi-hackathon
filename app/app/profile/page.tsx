@@ -17,15 +17,23 @@ export default function ProfilePage() {
   const [username, setUsername] = useState("")
   const [avatar, setAvatar] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
+  // Rediriger si pas d'utilisateur
   useEffect(() => {
     if (!user) {
       router.push("/events")
-    } else {
-      setUsername(user.username || "")
-      setAvatar(user.avatar || "")
     }
   }, [user, router])
+
+  // Initialiser les champs une seule fois
+  useEffect(() => {
+    if (user && !isInitialized) {
+      setUsername(user.username || "")
+      setAvatar(user.avatar || "")
+      setIsInitialized(true)
+    }
+  }, [user, isInitialized])
 
   const handleSave = async () => {
     if (!username.trim()) {

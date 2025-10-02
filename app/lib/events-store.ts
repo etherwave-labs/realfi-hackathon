@@ -10,6 +10,7 @@ export type EventOrganizer = {
   avatar?: string
   verified?: boolean
   walletAddress?: string
+  eventsCreated?: number
 }
 
 export type Registration = {
@@ -57,6 +58,7 @@ type EventsState = {
   addEvent: (event: NewEventInput) => string
   updateEvent: (id: string, changes: Partial<Event>) => void
   getEventById: (id: string) => Event | undefined
+  getEventsByOrganizer: (walletAddress: string) => Event[]
   registerForEvent: (eventId: string, userAddress: string, transactionHash: string, amount: number, currency: string) => string
   isUserRegistered: (eventId: string, userAddress: string) => boolean
   getUserRegistrations: (userAddress: string) => Registration[]
@@ -180,6 +182,11 @@ export const useEventsStore = create<EventsState>()((set, get) => ({
       getEventById: (id) => {
         const found = get().events.find((event) => event.id === id)
         return found ? normalizeEvent(found) : undefined
+      },
+      getEventsByOrganizer: (walletAddress) => {
+        return get().events.filter(
+          (event) => event.organizer?.walletAddress?.toLowerCase() === walletAddress.toLowerCase()
+        )
       },
       registerForEvent: (eventId, userAddress, transactionHash, amount, currency) => {
         const registrationId = `REG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`

@@ -48,7 +48,17 @@ export default function EventDetailPage() {
   }
 
   const handleStartRegistration = () => {
-    // Si l'utilisateur est déjà connecté, aller à la pré-confirmation
+    // Si l'événement est gratuit, inscription directe
+    if (currentEvent.price === 0) {
+      if (user) {
+        handleFreeRegistration()
+      } else {
+        setRegistrationStep("wallet")
+      }
+      return
+    }
+
+    // Pour les événements payants
     if (user) {
       setRegistrationStep("pre-payment")
     } else {
@@ -57,9 +67,30 @@ export default function EventDetailPage() {
   }
 
   const handleWalletConnect = () => {
-    // Une fois connecté, passer à la pré-confirmation
+    // Une fois connecté, vérifier si c'est gratuit
     if (user) {
-      setRegistrationStep("pre-payment")
+      if (currentEvent.price === 0) {
+        handleFreeRegistration()
+      } else {
+        setRegistrationStep("pre-payment")
+      }
+    }
+  }
+
+  const handleFreeRegistration = () => {
+    // Inscription gratuite sans transaction
+    if (user && currentEvent) {
+      const regId = registerForEvent(
+        currentEvent.id,
+        user.address,
+        "FREE-EVENT-NO-TX", // Pas de hash de transaction pour les événements gratuits
+        0,
+        currentEvent.currency
+      )
+      setRegistrationId(regId)
+      setTransactionHash("FREE-EVENT")
+      setRegistrationStep("confirmation")
+      console.log("✅ Inscription gratuite réussie:", regId)
     }
   }
 
@@ -190,9 +221,9 @@ export default function EventDetailPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{currentEvent.organizer.name}</span>
-                  {currentEvent.organizer.verified && (
+                  {currentEvent.organizer.eventsCreated !== undefined && (
                     <Badge variant="secondary" className="text-xs">
-                      Verified
+                      {currentEvent.organizer.eventsCreated} {currentEvent.organizer.eventsCreated === 1 ? 'event' : 'events'}
                     </Badge>
                   )}
                 </div>

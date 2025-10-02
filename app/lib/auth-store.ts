@@ -53,10 +53,18 @@ export const useAuthStore = create<AuthState>()(
 
           if (accounts && accounts.length > 0) {
             const address = accounts[0]
+            const currentUser = get().user
+            
+            // Préserver le username et l'avatar s'ils existent et que l'adresse est la même
+            const preservedProfile = currentUser && currentUser.address === address 
+              ? { username: currentUser.username, avatar: currentUser.avatar }
+              : {}
+            
             set({
               user: {
                 address,
                 loginType,
+                ...preservedProfile,
               },
               isConnecting: false,
             })

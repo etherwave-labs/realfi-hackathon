@@ -38,6 +38,11 @@ export function ConfirmationModal({
 
   useEffect(() => {
     if (isOpen && transactionHash) {
+      // Pour les événements gratuits, pas de vérification
+      if (transactionHash === "FREE-EVENT") {
+        setIsVerifying(false)
+        return
+      }
       const timer = setTimeout(() => {
         setIsVerifying(false)
       }, 2000)
@@ -56,6 +61,7 @@ export function ConfirmationModal({
     return `${address.slice(0, 6)}...${address.slice(-4)}`
   }
 
+  const isFreeEvent = transactionHash === "FREE-EVENT" || amount === 0
   const explorerUrl = `https://sepolia.etherscan.io/tx/${transactionHash}`
 
   return (
@@ -76,7 +82,11 @@ export function ConfirmationModal({
               {isVerifying ? "Verifying..." : "Registration Confirmed!"}
             </DialogTitle>
             <DialogDescription>
-              {isVerifying ? "Confirming your transaction on the blockchain..." : "Your payment has been successfully processed"}
+              {isVerifying 
+                ? "Confirming your registration..." 
+                : isFreeEvent 
+                  ? "Your free registration has been confirmed" 
+                  : "Your payment has been successfully processed"}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -85,15 +95,45 @@ export function ConfirmationModal({
           <div className="flex flex-col items-center justify-center py-8 space-y-4">
             <Loader2 className="h-12 w-12 text-blue-500 animate-spin" />
             <p className="text-sm text-muted-foreground text-center">
-              Verifying transaction on Ethereum Sepolia...
+              {isFreeEvent ? "Confirming your registration..." : "Verifying transaction on Ethereum Sepolia..."}
             </p>
-            <p className="text-xs text-muted-foreground text-center">
-              This may take a few seconds
-            </p>
+            {!isFreeEvent && (
+              <p className="text-xs text-muted-foreground text-center">
+                This may take a few seconds
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
-            {amount && (
+            {isFreeEvent ? (
+              <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+                <CardContent className="pt-6 space-y-3">
+                  <div className="text-center space-y-2">
+                    <h3 className="font-semibold text-lg text-green-700 dark:text-green-400">
+                      ✅ Free Registration Confirmed!
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      You've been registered to this free event
+                    </p>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Event Type</span>
+                      <span className="font-semibold text-green-600 dark:text-green-400 text-lg">
+                        FREE 🎉
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Registration</span>
+                      <span className="font-medium">Instant</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : amount ? (
               <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
                 <CardContent className="pt-6 space-y-3">
                   <div className="text-center space-y-2">
@@ -129,7 +169,7 @@ export function ConfirmationModal({
                   </div>
                 </CardContent>
               </Card>
-            )}
+            ) : null}
 
             <Card>
               <CardHeader className="pb-3">
@@ -156,46 +196,48 @@ export function ConfirmationModal({
               </div>
             </div>
 
-            <Card>
-              <CardContent className="pt-6 space-y-3">
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Transaction Hash:</p>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 p-2 bg-muted rounded text-xs break-all">
-                      {transactionHash}
-                    </code>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleCopyTxHash}
-                      className="flex-shrink-0"
+            {!isFreeEvent && (
+              <Card>
+                <CardContent className="pt-6 space-y-3">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Transaction Hash:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 p-2 bg-muted rounded text-xs break-all">
+                        {transactionHash}
+                      </code>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCopyTxHash}
+                        className="flex-shrink-0"
+                      >
+                        {isCopied ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <a
+                      href={explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline inline-flex items-center gap-1"
                     >
-                      {isCopied ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
+                      <ExternalLink className="h-3 w-3" />
+                      View on Sepolia Etherscan
+                    </a>
                   </div>
-                  <a
-                    href={explorerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    View on Sepolia Etherscan
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>✅ Next steps:</strong>
               </p>
               <ul className="text-xs text-blue-800/80 dark:text-blue-200/80 space-y-1 mt-2 list-disc list-inside">
-                <li>You will receive a refund + 20% bonus if you attend</li>
+                {!isFreeEvent && <li>You will receive a refund + 20% bonus if you attend</li>}
                 <li>Don't forget to check-in on the day of the event!</li>
                 <li>Keep your QR code for access</li>
               </ul>

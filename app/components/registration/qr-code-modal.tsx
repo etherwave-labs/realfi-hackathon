@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -28,7 +29,11 @@ export function QRCodeModal({
   transactionHash,
   eventDate,
 }: QRCodeModalProps) {
-  const qrData = generateQRCodeData(registrationId, eventId, userAddress, transactionHash)
+  // Mémoriser le QR code pour qu'il ne change pas à chaque rendu
+  const qrData = useMemo(
+    () => generateQRCodeData(registrationId, eventId, userAddress, transactionHash),
+    [registrationId, eventId, userAddress, transactionHash]
+  )
 
   const handleDownload = () => {
     const svg = document.getElementById("qr-code-svg")

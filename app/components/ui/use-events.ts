@@ -7,8 +7,9 @@ export function useEvents() {
   const addEvent = useEventsStore((state) => state.addEvent)
   const updateEvent = useEventsStore((state) => state.updateEvent)
   const getEventById = useEventsStore((state) => state.getEventById)
+  const getEventsByOrganizer = useEventsStore((state) => state.getEventsByOrganizer)
 
-  return { events, addEvent, updateEvent, getEventById }
+  return { events, addEvent, updateEvent, getEventById, getEventsByOrganizer }
 }
 
 export function useEvent(id: string | undefined) {

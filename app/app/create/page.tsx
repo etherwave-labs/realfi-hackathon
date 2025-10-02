@@ -53,7 +53,25 @@ export default function CreateEventPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
-  const { addEvent } = useEvents()
+  const { addEvent, getEventsByOrganizer } = useEvents()
+  
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    category: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    location: "",
+    capacity: "",
+    registrationFee: "",
+    currency: "USDC",
+    requirements: "",
+    isPublic: true,
+    allowWaitlist: true,
+    image: DEFAULT_EVENT_IMAGE,
+    noShowPayoutPercentage: "20",
+  })
 
   // Si l'utilisateur n'est pas connecté, rediriger
   if (!user) {
@@ -77,26 +95,14 @@ export default function CreateEventPage() {
     )
   }
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    location: "",
-    capacity: "",
-    registrationFee: "",
-    currency: "USDC",
-    refundPolicy: "Full refund + 20% bonus if you attend. No refund for no-shows.",
-    requirements: "",
-    isPublic: true,
-    allowWaitlist: true,
-    image: DEFAULT_EVENT_IMAGE,
-    noShowPayoutPercentage: "20",
-  })
-
   const handleInputChange = (field: string, value: string | boolean) => {
+    // Validation spéciale pour le pourcentage de bonus (max 100%)
+    if (field === "noShowPayoutPercentage" && typeof value === "string") {
+      const numValue = Number(value)
+      if (value !== "" && (!isNaN(numValue) && numValue > 100)) {
+        return // Bloquer la saisie si > 100
+      }
+    }
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
@@ -131,6 +137,15 @@ export default function CreateEventPage() {
     const startDateTime = formData.date && formData.startTime ? `${formData.date}T${formData.startTime}` : undefined
     const endDateTime = formData.date && formData.endTime ? `${formData.date}T${formData.endTime}` : undefined
 
+    // Calculer le nombre d'événements déjà créés par cet organisateur
+    const organizerEvents = user?.address ? getEventsByOrganizer(user.address) : []
+    const eventsCreatedCount = organizerEvents.length
+
+    // Générer automatiquement la politique de remboursement basée sur le pourcentage de bonus
+    const refundPolicy = registrationFee === 0 
+      ? "Free event - no deposit required."
+      : `Deposit returned + ${payoutPercentage}% bonus if you attend. No refund for no-shows.`
+
     const newEvent: NewEventInput = {
       title: formData.title,
       description: formData.description,
@@ -147,13 +162,15 @@ export default function CreateEventPage() {
       attendees: 0,
       capacity: Number(formData.capacity),
       organizer: {
-        name: "Community Organizer",
+        name: user?.username || `User ${user?.address.slice(0, 6)}`,
+        avatar: user?.avatar,
         verified: true,
-        walletAddress: user?.address, // Utilise l'adresse du wallet connecté
+        walletAddress: user?.address,
+        eventsCreated: eventsCreatedCount + 1, // +1 pour inclure cet événement
       },
       image: formData.image || DEFAULT_EVENT_IMAGE,
       tags,
-      refundPolicy: formData.refundPolicy,
+      refundPolicy: refundPolicy,
       requirements: formData.requirements,
       startDateTime,
       endDateTime,
@@ -437,12 +454,17 @@ export default function CreateEventPage() {
                       value={formData.noShowPayoutPercentage}
                       onChange={(e) => handleInputChange("noShowPayoutPercentage", e.target.value)}
                       required
+                      className={
+                        formData.noShowPayoutPercentage && Number(formData.noShowPayoutPercentage) > 100
+                          ? "border-red-500"
+                          : ""
+                      }
                     />
                   </div>
                   <span className="pb-2 text-muted-foreground">%</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Attendees can claim up to this percentage of the no-show deposit pool; you’ll keep the rest.
+                  Attendees can claim up to this percentage of the no-show deposit pool; you'll keep the rest. <strong>(Max: 100%)</strong>
                 </p>
               </CardContent>
             </Card>
@@ -471,26 +493,24 @@ export default function CreateEventPage() {
               </CardContent>
             </Card>
 
-            {/* Refund Policy */}
+            {/* Refund Policy Info */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <DollarSign className="mr-2 h-5 w-5" />
-                  Refund Policy
+                  How It Works
                 </CardTitle>
-                <CardDescription>How refunds work for your event</CardDescription>
+                <CardDescription>Automatic refund policy based on your settings</CardDescription>
               </CardHeader>
               <CardContent>
-                <Textarea
-                  placeholder="Describe your refund policy..."
-                  rows={3}
-                  value={formData.refundPolicy}
-                  onChange={(e) => handleInputChange("refundPolicy", e.target.value)}
-                />
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg space-y-3">
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    <strong>How it works:</strong> Attendees who show up get their full registration fee back plus a 20%
-                    bonus funded by no-shows. You receive a 10% service fee from the total registration pool.
+                    <strong>Politique de remboursement :</strong>
+                  </p>
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    {formData.registrationFee && Number(formData.registrationFee) > 0 
+                      ? `Les participants qui se présentent récupèrent leur dépôt + ${formData.noShowPayoutPercentage}% de bonus (financé par les absents). Pas de remboursement pour les absents.`
+                      : "Événement gratuit - aucun dépôt requis."}
                   </p>
                 </div>
               </CardContent>

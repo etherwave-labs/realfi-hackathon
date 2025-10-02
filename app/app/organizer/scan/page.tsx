@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -8,12 +8,24 @@ import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckCircle, XCircle, Upload, QrCode, AlertTriangle } from "lucide-react"
 import { useEventsStore } from "@/lib/events-store"
+import { useAuthStore } from "@/lib/auth-store"
 import { verifyQRCodeData, QRCodeData } from "@/lib/qr-code-utils"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function ScanQRCodePage() {
   const { events, registrations, checkInUser } = useEventsStore()
+  const { user } = useAuthStore()
+  const router = useRouter()
   const [selectedEventId, setSelectedEventId] = useState<string>("")
+  
+  // Filtrer pour ne montrer que les événements dont l'utilisateur est l'organisateur
+  const myEvents = useMemo(() => {
+    if (!user?.address) return []
+    return events.filter(
+      (event) => event.organizer?.walletAddress?.toLowerCase() === user.address.toLowerCase()
+    )
+  }, [events, user?.address])
   const [scannedData, setScannedData] = useState<string>("")
   const [verificationResult, setVerificationResult] = useState<{
     valid: boolean
@@ -96,6 +108,28 @@ export default function ScanQRCodePage() {
     }
   }
 
+  // Rediriger si pas connecté
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-16">
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle>Authentification requise</CardTitle>
+            <CardDescription>Vous devez être connecté pour scanner des QR codes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Connectez votre wallet pour accéder à cette page.
+            </p>
+            <Button asChild className="w-full">
+              <Link href="/">Retour à l'accueil</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div id="qr-reader" style={{ display: "none" }}></div>
@@ -105,7 +139,7 @@ export default function ScanQRCodePage() {
           ← Back to Dashboard
         </Link>
         <h1 className="text-3xl font-bold tracking-tight mb-2">Scan QR Codes</h1>
-        <p className="text-muted-foreground">Verify and check-in attendees</p>
+        <p className="text-muted-foreground">Verify and check-in attendees for your events</p>
       </div>
 
       <div className="space-y-6">
@@ -120,12 +154,12 @@ export default function ScanQRCodePage() {
                 <SelectValue placeholder="Select an event..." />
               </SelectTrigger>
               <SelectContent>
-                {events.length === 0 ? (
+                {myEvents.length === 0 ? (
                   <SelectItem value="none" disabled>
-                    No events available
+                    Vous n'avez pas encore créé d'événements
                   </SelectItem>
                 ) : (
-                  events.map((event) => (
+                  myEvents.map((event) => (
                     <SelectItem key={event.id} value={event.id}>
                       {event.title} - {event.date}
                     </SelectItem>

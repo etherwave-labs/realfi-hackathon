@@ -40,9 +40,9 @@ export function OrganizerInfoCard({ organizer }: OrganizerInfoCardProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>About the Organizer</CardTitle>
-          {organizer.verified && (
-            <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/20">
-              ✓ Verified
+          {organizer.eventsCreated !== undefined && (
+            <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+              {organizer.eventsCreated} {organizer.eventsCreated === 1 ? 'event' : 'events'}
             </Badge>
           )}
         </div>
