@@ -199,25 +199,38 @@ export default function CreateEventPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
-      <div className="mb-8">
-        <Button variant="ghost" asChild className="mb-4">
-          <Link href="/organizer/dashboard">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Create New Event</h1>
-        <p className="text-muted-foreground">Set up your event with stablecoin deposits and guaranteed attendance</p>
+    <div className="min-h-screen">
+      {/* Hero with animated gradient */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/40 via-gray-50 to-blue-50/40 py-12 mb-8">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="animate-slide-down">
+            <Button variant="ghost" asChild className="mb-4 hover:text-orange-400 transition-colors hover:scale-105 hover:-translate-x-1">
+              <Link href="/organizer/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Link>
+            </Button>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+              <span className="text-gradient-metamask text-glow hover:animate-wiggle inline-block cursor-default">Create New Event</span>
+            </h1>
+            <p className="text-gray-600 text-lg">Set up your event with stablecoin deposits and guaranteed attendance</p>
+          </div>
+        </div>
       </div>
+      
+      <div className="container mx-auto px-4 pb-8 max-w-4xl">
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Form */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Information */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
                 <CardDescription>Essential details about your event</CardDescription>
@@ -289,10 +302,10 @@ export default function CreateEventPage() {
             </Card>
 
             {/* Date & Time */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Calendar className="mr-2 h-5 w-5" />
+                  <Calendar className="mr-2 h-5 w-5 text-orange-400" />
                   Date & Time
                 </CardTitle>
                 <CardDescription>When will your event take place?</CardDescription>
@@ -334,10 +347,10 @@ export default function CreateEventPage() {
             </Card>
 
             {/* Location */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-blue-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <MapPin className="mr-2 h-5 w-5" />
+                  <MapPin className="mr-2 h-5 w-5 text-blue-400" />
                   Location
                 </CardTitle>
                 <CardDescription>Where will your event be held?</CardDescription>
@@ -357,7 +370,7 @@ export default function CreateEventPage() {
             </Card>
 
             {/* Additional Details */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <CardHeader>
                 <CardTitle>Additional Details</CardTitle>
                 <CardDescription>Extra information for attendees</CardDescription>
@@ -403,10 +416,10 @@ export default function CreateEventPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up sticky top-4" style={{ animationDelay: '0.1s' }}>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <DollarSign className="mr-2 h-5 w-5" />
+                  <DollarSign className="mr-2 h-5 w-5 text-orange-400" />
                   No-show payout
                 </CardTitle>
                 <CardDescription>Choose how much of the no-show pool is paid to attendees</CardDescription>
@@ -469,10 +482,10 @@ export default function CreateEventPage() {
               </CardContent>
             </Card>
             {/* Capacity & Pricing */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-blue-400/30 transition-all duration-300 animate-fade-in-up sticky top-4" style={{ animationDelay: '0.2s' }}>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <Users className="mr-2 h-5 w-5" />
+                  <Users className="mr-2 h-5 w-5 text-blue-400" />
                   Capacity & Pricing
                 </CardTitle>
                 <CardDescription>Set your event limits and fees</CardDescription>
@@ -494,10 +507,10 @@ export default function CreateEventPage() {
             </Card>
 
             {/* Refund Policy Info */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
               <CardHeader>
                 <CardTitle className="flex items-center">
-                  <DollarSign className="mr-2 h-5 w-5" />
+                  <DollarSign className="mr-2 h-5 w-5 text-orange-400" />
                   How It Works
                 </CardTitle>
                 <CardDescription>Automatic refund policy based on your settings</CardDescription>
@@ -517,7 +530,7 @@ export default function CreateEventPage() {
             </Card>
 
             {/* Preview */}
-            <Card>
+            <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
               <CardHeader>
                 <CardTitle>Event Preview</CardTitle>
                 <CardDescription>How your event will appear</CardDescription>
@@ -553,7 +566,7 @@ export default function CreateEventPage() {
           <Button type="button" variant="outline" asChild>
             <Link href="/organizer/dashboard">Cancel</Link>
           </Button>
-          <Button type="submit" disabled={!isFormValid() || isSubmitting} size="lg">
+          <Button type="submit" disabled={!isFormValid() || isSubmitting} size="lg" className="btn-metamask glow-metamask hover:scale-105">
             {isSubmitting ? (
               <>
                 <Clock className="mr-2 h-4 w-4 animate-spin" />
@@ -568,6 +581,7 @@ export default function CreateEventPage() {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   )
 }

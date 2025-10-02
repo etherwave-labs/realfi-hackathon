@@ -113,33 +113,44 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">My Wallet</h1>
-            <p className="text-muted-foreground">Manage your crypto assets and view your balance</p>
+    <div className="min-h-screen">
+      {/* Hero avec gradient animé */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/40 via-gray-50 to-blue-50/40 py-16 mb-8">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="flex items-center justify-between animate-fade-in-down">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+                <span className="text-gradient-metamask text-glow hover:animate-wiggle inline-block cursor-default">My Wallet</span>
+              </h1>
+              <p className="text-gray-600 text-lg">Manage your crypto assets and view your balance</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadBalances}
+              disabled={isLoading}
+              className="glass-panel hover:scale-110 hover:shadow-lg transition-all duration-300 border-orange-500/20"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadBalances}
-            disabled={isLoading}
-            className="rounded-2xl"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
         </div>
       </div>
+      
+      <div className="container mx-auto px-4 pb-8 max-w-4xl">
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Wallet Address Card */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <WalletIcon className="h-5 w-5 mr-2" />
+              <WalletIcon className="h-5 w-5 mr-2 text-orange-400" />
               Wallet Address
             </CardTitle>
             <CardDescription>Your unique blockchain address</CardDescription>
@@ -201,11 +212,11 @@ export default function WalletPage() {
         </Card>
 
         {/* USDC Balance Card */}
-        <Card>
+        <Card className="glass-card border-gray-200 hover:border-orange-400/30 hover:scale-105 transition-all duration-300 animate-fade-in-up group" style={{ animationDelay: '0.2s' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>USDC Balance</CardTitle>
-              <span className="text-3xl">💵</span>
+              <span className="text-3xl group-hover:animate-bounce-gentle">💵</span>
             </div>
             <CardDescription>USD Coin</CardDescription>
           </CardHeader>
@@ -244,11 +255,11 @@ export default function WalletPage() {
         </Card>
 
         {/* ETH Balance Card */}
-        <Card>
+        <Card className="glass-card border-gray-200 hover:border-blue-400/30 hover:scale-105 transition-all duration-300 animate-fade-in-up group" style={{ animationDelay: '0.3s' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>ETH Balance</CardTitle>
-              <span className="text-3xl">⟠</span>
+              <span className="text-3xl group-hover:animate-bounce-gentle">⟠</span>
             </div>
             <CardDescription>Ethereum (for gas fees)</CardDescription>
           </CardHeader>
@@ -287,7 +298,7 @@ export default function WalletPage() {
         </Card>
 
         {/* Quick Actions Card */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common wallet operations</CardDescription>
@@ -322,6 +333,7 @@ export default function WalletPage() {
             </div>
           </CardContent>
         </Card>
+      </div>
       </div>
     </div>
   )

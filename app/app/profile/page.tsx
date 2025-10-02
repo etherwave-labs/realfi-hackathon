@@ -59,17 +59,31 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="mb-8">
-        <Link href="/events" className="text-sm text-primary hover:underline mb-2 inline-flex items-center gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Events
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight mt-4 mb-2">Edit Profile</h1>
-        <p className="text-muted-foreground">Customize your profile information</p>
+    <div className="min-h-screen">
+      {/* Hero avec gradient animé */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/40 via-gray-50 to-blue-50/40 py-16 mb-8">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        <div className="container mx-auto px-4 max-w-2xl">
+          <div className="animate-fade-in-down">
+            <Link href="/events" className="text-sm text-orange-500 hover:text-orange-600 mb-2 inline-flex items-center gap-2 hover:gap-3 transition-all">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Events
+            </Link>
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mt-4 mb-3">
+              <span className="text-gradient-metamask text-glow hover:animate-wiggle inline-block cursor-default">Edit Profile</span>
+            </h1>
+            <p className="text-gray-600 text-lg">Customize your profile information</p>
+          </div>
+        </div>
       </div>
+      
+      <div className="container mx-auto px-4 pb-8 max-w-2xl">
 
-      <Card>
+      <Card className="glass-card border-gray-200 hover:border-orange-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
         <CardHeader>
           <CardTitle>Profile Settings</CardTitle>
           <CardDescription>Update your username and avatar</CardDescription>
@@ -134,7 +148,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
+      <Card className="mt-6 glass-card border-gray-200 hover:border-blue-400/30 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
         <CardHeader>
           <CardTitle>Account Information</CardTitle>
           <CardDescription>Your blockchain identity</CardDescription>
@@ -152,6 +166,7 @@ export default function ProfilePage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

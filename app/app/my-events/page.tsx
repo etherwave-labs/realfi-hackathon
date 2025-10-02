@@ -75,18 +75,32 @@ export default function MyEventsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight mb-2">My Events</h1>
-        <p className="text-muted-foreground">Manage your registrations and view your history</p>
+    <div className="min-h-screen">
+      {/* Hero avec gradient animé */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-orange-50/40 via-gray-50 to-blue-50/40 py-16 mb-8">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" />
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-300/10 rounded-full mix-blend-multiply filter blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+        </div>
+        
+        <div className="container mx-auto px-4">
+          <div className="text-center animate-fade-in-down">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-3">
+              <span className="text-gradient-metamask text-glow hover:animate-wiggle inline-block cursor-default">My Events</span>
+            </h1>
+            <p className="text-gray-600 text-lg">Manage your registrations and view your history</p>
+          </div>
+        </div>
       </div>
+      
+      <div className="container mx-auto px-4 pb-8">
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="upcoming">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+        <TabsList className="grid w-full grid-cols-2 bg-white border border-gray-300">
+          <TabsTrigger value="upcoming" className="text-gray-700 data-[state=active]:bg-primary data-[state=active]:text-white">
             Upcoming ({upcomingEvents.length})
           </TabsTrigger>
-          <TabsTrigger value="past">
+          <TabsTrigger value="past" className="text-gray-700 data-[state=active]:bg-accent data-[state=active]:text-white">
             Past ({pastEvents.length})
           </TabsTrigger>
         </TabsList>
@@ -106,8 +120,8 @@ export default function MyEventsPage() {
               </CardContent>
             </Card>
           ) : (
-            upcomingEvents.map(({ registration, event }) => (
-              <Card key={registration.id}>
+            upcomingEvents.map(({ registration, event }, index) => (
+              <Card key={registration.id} className="glass-card border-gray-200 hover:border-orange-400/30 hover:-translate-y-1 transition-all duration-300 animate-fade-in-up" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
@@ -192,10 +206,10 @@ export default function MyEventsPage() {
               </CardContent>
             </Card>
           ) : (
-            pastEvents.map(({ registration, event }) => {
+            pastEvents.map(({ registration, event }, index) => {
               const isPast = isEventPast(event!)
               return (
-                <Card key={registration.id}>
+                <Card key={registration.id} className="glass-card border-gray-200 hover:border-emerald-400/30 hover:-translate-y-1 transition-all duration-300 animate-fade-in-up opacity-80 hover:opacity-100" style={{ animationDelay: `${0.2 + index * 0.1}s` }}>
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -265,6 +279,7 @@ export default function MyEventsPage() {
           )}
         </TabsContent>
       </Tabs>
+      </div>
 
       {selectedQRCode && (
         <QRCodeModal

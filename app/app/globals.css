@@ -4,78 +4,78 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  /* Updated to use dark theme as default with #242e3c background and colorful accents */
-  --background: #242e3c;
-  --foreground: #f8fafc;
-  --card: #354255;
-  --card-foreground: #f8fafc;
-  --popover: #354255;
-  --popover-foreground: #f8fafc;
-  --primary: #9068d4;
-  --primary-foreground: #ffffff;
-  --secondary: #475569;
-  --secondary-foreground: #f1f5f9;
-  --muted: #475569;
-  --muted-foreground: #94a3b8;
-  --accent: #06b6d4;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #475569;
-  --input: #475569;
-  --ring: #9068d4;
-  --chart-1: #9068d4;
-  --chart-2: #06b6d4;
-  --chart-3: #10b981;
-  --chart-4: #f59e0b;
-  --chart-5: #ef4444;
-  --radius: 1.5rem;
-  --sidebar: #354255;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #9068d4;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #475569;
-  --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: #475569;
-  --sidebar-ring: #9068d4;
-}
+  :root {
+    /* MetaMask Light Theme - Soft & Comfortable */
+    --background: #f8f9fa;
+    --foreground: #1a1d1f;
+    --card: #ffffff;
+    --card-foreground: #1a1d1f;
+    --popover: #ffffff;
+    --popover-foreground: #1a1d1f;
+    --primary: #f6851b;
+    --primary-foreground: #ffffff;
+    --secondary: #037dd6;
+    --secondary-foreground: #ffffff;
+    --muted: #e9ecef;
+    --muted-foreground: #495057;
+    --accent: #ff6b00;
+    --accent-foreground: #ffffff;
+    --destructive: #d73a49;
+    --destructive-foreground: #ffffff;
+    --border: #dee2e6;
+    --input: #ffffff;
+    --ring: #f6851b;
+    --chart-1: #f6851b;
+    --chart-2: #037dd6;
+    --chart-3: #ff6b00;
+    --chart-4: #6366f1;
+    --chart-5: #8b5cf6;
+    --radius: 1rem;
+    --sidebar: #ffffff;
+    --sidebar-foreground: #1a1d1f;
+    --sidebar-primary: #f6851b;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f8f9fa;
+    --sidebar-accent-foreground: #1a1d1f;
+    --sidebar-border: #dee2e6;
+    --sidebar-ring: #f6851b;
+  }
 
-.dark {
-  /* Kept dark theme consistent with root for seamless experience */
-  --background: #242e3c;
-  --foreground: #f8fafc;
-  --card: #354255;
-  --card-foreground: #f8fafc;
-  --popover: #354255;
-  --popover-foreground: #f8fafc;
-  --primary: #9068d4;
-  --primary-foreground: #ffffff;
-  --secondary: #475569;
-  --secondary-foreground: #f1f5f9;
-  --muted: #475569;
-  --muted-foreground: #94a3b8;
-  --accent: #06b6d4;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #475569;
-  --input: #475569;
-  --ring: #9068d4;
-  --chart-1: #9068d4;
-  --chart-2: #06b6d4;
-  --chart-3: #10b981;
-  --chart-4: #f59e0b;
-  --chart-5: #ef4444;
-  --sidebar: #354255;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #9068d4;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #475569;
-  --sidebar-accent-foreground: #f1f5f9;
-  --sidebar-border: #475569;
-  --sidebar-ring: #9068d4;
-}
+  .dark {
+    /* MetaMask Dark Theme - Orange Fox & Deep Blue */
+    --background: #0a0b0d;
+    --foreground: #ffffff;
+    --card: #1c1e26;
+    --card-foreground: #ffffff;
+    --popover: #1c1e26;
+    --popover-foreground: #ffffff;
+    --primary: #f6851b;
+    --primary-foreground: #ffffff;
+    --secondary: #037dd6;
+    --secondary-foreground: #ffffff;
+    --muted: #24272f;
+    --muted-foreground: #9ca3af;
+    --accent: #ff6b00;
+    --accent-foreground: #ffffff;
+    --destructive: #d73a49;
+    --destructive-foreground: #ffffff;
+    --border: #2d3139;
+    --input: #24272f;
+    --ring: #f6851b;
+    --chart-1: #f6851b;
+    --chart-2: #037dd6;
+    --chart-3: #ff6b00;
+    --chart-4: #6366f1;
+    --chart-5: #8b5cf6;
+    --sidebar: #1c1e26;
+    --sidebar-foreground: #ffffff;
+    --sidebar-primary: #f6851b;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #24272f;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #2d3139;
+    --sidebar-ring: #f6851b;
+  }
 
 @theme inline {
   /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
@@ -128,22 +128,51 @@
   }
 }
 
-/* Added custom utility classes for colorful gradients and enhanced styling */
+/* MetaMask-inspired gradient utilities - Orange Fox & Blue */
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, #9068d4 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #f6851b 0%, #ff6b00 100%);
   }
 
   .gradient-accent {
-    background: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+    background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
   }
 
   .gradient-warm {
-    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    background: linear-gradient(135deg, #f6851b 0%, #037dd6 100%);
+  }
+
+  .gradient-metamask {
+    background: linear-gradient(135deg, #f6851b 0%, #ff6b00 50%, #037dd6 100%);
+  }
+
+  .gradient-fox {
+    background: linear-gradient(135deg, #ff9500 0%, #f6851b 100%);
   }
 
   .text-gradient-primary {
-    background: linear-gradient(135deg, #9068d4 0%, #06b6d4 100%);
+    background: linear-gradient(135deg, #f6851b 0%, #ff6b00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-accent {
+    background: linear-gradient(135deg, #ff6b00 0%, #ff9500 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-vibrant {
+    background: linear-gradient(135deg, #f6851b 0%, #ff6b00 50%, #037dd6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-metamask {
+    background: linear-gradient(90deg, #f6851b 0%, #ff6b00 50%, #037dd6 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -152,6 +181,201 @@
   .border-gradient {
     border: 2px solid transparent;
     background: linear-gradient(var(--background), var(--background)) padding-box,
-      linear-gradient(135deg, #9068d4, #06b6d4) border-box;
+      linear-gradient(135deg, #f6851b, #037dd6) border-box;
+  }
+
+      /* MetaMask glassmorphism effects - Light Mode (Soft) */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(246, 133, 27, 0.15);
+        box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.06),
+                    0 0 0 1px rgba(246, 133, 27, 0.08);
+      }
+
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(222, 226, 230, 0.6);
+      }
+
+      .glass-orange {
+        background: rgba(246, 133, 27, 0.06);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(246, 133, 27, 0.15);
+      }
+
+      .glass-blue {
+        background: rgba(3, 125, 214, 0.06);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(3, 125, 214, 0.15);
+      }
+
+  /* MetaMask animated gradients */
+  .gradient-animated {
+    background: linear-gradient(-45deg, #f6851b, #ff6b00, #037dd6, #ff9500);
+    background-size: 400% 400%;
+    animation: gradient 10s ease infinite;
+  }
+
+  .gradient-animated-slow {
+    background: linear-gradient(-45deg, #f6851b, #ff6b00, #ff9500, #037dd6);
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+      @keyframes gradient {
+        0%, 100% { background-position: 0% 50%; }
+        25% { background-position: 100% 50%; }
+        50% { background-position: 50% 100%; }
+        75% { background-position: 100% 50%; }
+      }
+
+      @keyframes scroll-slow {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+
+  /* Infinite scroll animation */
+  .scroll-container {
+    display: flex;
+    animation: scroll-slow 20s linear infinite;
+    will-change: transform;
+  }
+
+  .scroll-container:hover {
+    animation-play-state: paused;
+  }
+
+  /* Shimmer effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.5s linear infinite;
+  }
+
+      /* MetaMask glow effects - Light Mode */
+      .glow-primary {
+        box-shadow: 0 4px 20px rgba(246, 133, 27, 0.25);
+        transition: box-shadow 0.3s ease;
+      }
+
+      .glow-primary:hover {
+        box-shadow: 0 8px 30px rgba(246, 133, 27, 0.4),
+                    0 0 50px rgba(246, 133, 27, 0.2);
+      }
+
+      .glow-accent {
+        box-shadow: 0 4px 20px rgba(255, 107, 0, 0.25);
+        transition: box-shadow 0.3s ease;
+      }
+
+      .glow-accent:hover {
+        box-shadow: 0 8px 30px rgba(255, 107, 0, 0.4),
+                    0 0 50px rgba(255, 107, 0, 0.2);
+      }
+
+      .glow-blue {
+        box-shadow: 0 4px 20px rgba(3, 125, 214, 0.25);
+        transition: box-shadow 0.3s ease;
+      }
+
+      .glow-blue:hover {
+        box-shadow: 0 8px 30px rgba(3, 125, 214, 0.4),
+                    0 0 50px rgba(3, 125, 214, 0.2);
+      }
+
+      .glow-metamask {
+        box-shadow: 0 4px 25px rgba(246, 133, 27, 0.2),
+                    0 8px 50px rgba(3, 125, 214, 0.1);
+        transition: box-shadow 0.3s ease;
+      }
+
+      .glow-metamask:hover {
+        box-shadow: 0 8px 35px rgba(246, 133, 27, 0.35),
+                    0 12px 60px rgba(3, 125, 214, 0.2);
+      }
+
+  /* Card hover effects */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Animated border gradient */
+  .border-gradient-animated {
+    position: relative;
+    border: 2px solid transparent;
+    background: var(--card);
+    background-clip: padding-box;
+  }
+
+  .border-gradient-animated::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, #f6851b, #ff6b00, #037dd6);
+    background-size: 300% 300%;
+    animation: gradient 8s ease infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    z-index: -1;
+  }
+
+      /* MetaMask text and card effects - Light Mode */
+      .text-glow {
+        text-shadow: 0 2px 10px rgba(246, 133, 27, 0.3),
+                     0 4px 20px rgba(246, 133, 27, 0.15);
+      }
+
+      .text-glow-blue {
+        text-shadow: 0 2px 10px rgba(3, 125, 214, 0.3),
+                     0 4px 20px rgba(3, 125, 214, 0.15);
+      }
+
+      .card-glow {
+        box-shadow: 0 0 0 1px rgba(246, 133, 27, 0.1),
+                    0 4px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+      }
+
+      .card-glow:hover {
+        box-shadow: 0 0 0 1px rgba(246, 133, 27, 0.3),
+                    0 12px 40px rgba(0, 0, 0, 0.12),
+                    0 0 30px rgba(246, 133, 27, 0.15);
+        transform: translateY(-4px);
+      }
+
+  /* MetaMask button style */
+  .btn-metamask {
+    background: linear-gradient(135deg, #f6851b 0%, #ff6b00 100%);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 14px 0 rgba(246, 133, 27, 0.4);
+  }
+
+  .btn-metamask:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px 0 rgba(246, 133, 27, 0.6);
   }
 }
