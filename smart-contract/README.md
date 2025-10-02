@@ -1,0 +1,1 @@
+This folder contains the EVM smart contracts powering RealFi Events.
