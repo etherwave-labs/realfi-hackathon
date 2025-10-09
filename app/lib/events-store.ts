@@ -46,6 +46,7 @@ export type Event = {
   isPublic?: boolean
   allowWaitlist?: boolean
   noShowPayoutPercentage?: number
+  isFinalized?: boolean
 }
 
 export type NewEventInput = Omit<Event, "id" | "attendees"> & {
@@ -88,12 +89,7 @@ const seedEvents: Event[] = []
 const initialEvents = seedEvents.map(normalizeEvent)
 
 const getNextEventId = (events: Event[]): string => {
-  if (events.length === 0) return "1"
-  const numericIds = events
-    .map((e) => parseInt(e.id, 10))
-    .filter((id) => !isNaN(id))
-  const maxId = numericIds.length > 0 ? Math.max(...numericIds) : 0
-  return `${maxId + 1}`
+  return Date.now().toString()
 }
 
 export const useEventsStore = create<EventsState>()((set, get) => ({

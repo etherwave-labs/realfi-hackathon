@@ -12,6 +12,9 @@ import { isEventPast } from "@/lib/event-utils"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { QRCodeModal } from "@/components/registration/qr-code-modal"
+import { useEscrow } from "@/hooks/use-escrow"
+import { Loader2, DollarSign } from "lucide-react"
+import { ethers } from "ethers"
 
 export default function MyEventsPage() {
   const { user } = useAuthStore()
@@ -26,18 +29,11 @@ export default function MyEventsPage() {
     userAddress: string
     transactionHash: string
   } | null>(null)
+  const { withdrawRedistribution, calculatePotentialRedistribution, isProcessing } = useEscrow()
+  const [withdrawingEventId, setWithdrawingEventId] = useState<string | null>(null)
+  const [redistributionAmounts, setRedistributionAmounts] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    if (!user) {
-      router.push("/events")
-    }
-  }, [user, router])
-
-  if (!user) {
-    return null
-  }
-
-  const userRegistrations = getUserRegistrations(user.address)
+  const userRegistrations = user ? getUserRegistrations(user.address) : []
   
   const userEventsWithDetails = userRegistrations.map((registration) => {
     const event = events.find((e) => e.id === registration.eventId)
@@ -49,6 +45,63 @@ export default function MyEventsPage() {
 
   const upcomingEvents = userEventsWithDetails.filter((item) => !isEventPast(item.event!))
   const pastEvents = userEventsWithDetails.filter((item) => isEventPast(item.event!))
+
+  useEffect(() => {
+    if (!user) {
+      router.push("/events")
+    }
+  }, [user, router])
+
+  // Charger les montants de redistribution pour les événements passés PAYANTS
+  useEffect(() => {
+    const loadRedistributions = async () => {
+      if (!user?.address) return
+      
+      for (const { registration, event } of pastEvents) {
+        // Seulement pour les événements payants
+        if (registration.checkedIn && event && event.price > 0) {
+          const amount = await calculatePotentialRedistribution(event.id, user.address)
+          if (amount) {
+            setRedistributionAmounts(prev => ({
+              ...prev,
+              [event.id]: ethers.formatEther(amount)
+            }))
+          }
+        }
+      }
+    }
+    loadRedistributions()
+  }, [pastEvents, user, calculatePotentialRedistribution])
+
+  if (!user) {
+    return null
+  }
+
+  const handleWithdraw = async (eventId: string) => {
+    if (!confirm("Voulez-vous retirer votre part de redistribution maintenant ?")) {
+      return
+    }
+
+    setWithdrawingEventId(eventId)
+    const result = await withdrawRedistribution(eventId)
+    setWithdrawingEventId(null)
+
+    if (result.success) {
+      alert(`✅ Redistribution retirée avec succès!\n\nVous avez reçu ${redistributionAmounts[eventId] || "votre"} ETH\n\nTransaction: ${result.txHash}`)
+      // Recharger les montants
+      if (user?.address) {
+        const amount = await calculatePotentialRedistribution(eventId, user.address)
+        if (amount) {
+          setRedistributionAmounts(prev => ({
+            ...prev,
+            [eventId]: ethers.formatEther(amount)
+          }))
+        }
+      }
+    } else {
+      alert(`❌ Erreur lors du retrait: ${result.error}`)
+    }
+  }
 
   const getStatusBadge = (isPast: boolean, checkedIn: boolean) => {
     if (!isPast) {
@@ -243,11 +296,11 @@ export default function MyEventsPage() {
                           {registration.amount} {registration.currency}
                         </span>
                       </div>
-                      {registration.checkedIn && (
+                      {registration.checkedIn && redistributionAmounts[event!.id] && (
                         <div className="flex items-center justify-between text-green-600 dark:text-green-400">
-                          <span>Refund + Bonus:</span>
+                          <span>💰 Redistribution disponible:</span>
                           <span className="font-semibold">
-                            +{(registration.amount * 1.2).toFixed(2)} {registration.currency}
+                            +{parseFloat(redistributionAmounts[event!.id]).toFixed(4)} ETH
                           </span>
                         </div>
                       )}
@@ -269,9 +322,32 @@ export default function MyEventsPage() {
                       </div>
                     </div>
 
-                    <Button variant="outline" size="sm" className="w-full" asChild>
-                      <Link href={`/events/${event!.id}`}>View Event</Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={`/events/${event!.id}`}>View Event</Link>
+                      </Button>
+                      {registration.checkedIn && redistributionAmounts[event!.id] && parseFloat(redistributionAmounts[event!.id]) > 0 && (
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          onClick={() => handleWithdraw(event!.id)}
+                          disabled={isProcessing || withdrawingEventId === event!.id}
+                        >
+                          {withdrawingEventId === event!.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Retrait...
+                            </>
+                          ) : (
+                            <>
+                              <DollarSign className="mr-2 h-4 w-4" />
+                              Retirer
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               )

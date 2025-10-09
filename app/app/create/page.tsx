@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation"
 import { useEvents } from "@/components/ui/use-events"
 import { useAuthStore } from "@/lib/auth-store"
 import type { NewEventInput } from "@/lib/events-store"
+import { useEscrow } from "@/hooks/use-escrow"
 
 const categories = [
   "Tech Meetup",
@@ -54,6 +55,7 @@ export default function CreateEventPage() {
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
   const { addEvent, getEventsByOrganizer } = useEvents()
+  const { createEvent: createEventOnChain } = useEscrow()
   
   const [formData, setFormData] = useState({
     title: "",
@@ -180,6 +182,69 @@ export default function CreateEventPage() {
     }
 
     const eventId = addEvent(newEvent)
+
+    // Créer l'événement sur la blockchain SEULEMENT si c'est payant
+    if (startDateTime && endDateTime && registrationFee > 0) {
+      const eventEndDate = new Date(endDateTime)
+      const eventEndTimestamp = Math.floor(eventEndDate.getTime() / 1000)
+      const currentTimestamp = Math.floor(Date.now() / 1000)
+      
+      // IMPORTANT: Ajouter un buffer de sécurité pour le fuseau horaire
+      // La blockchain utilise UTC, donc on ajoute 10 minutes de buffer
+      const SAFETY_BUFFER = 600 // 10 minutes en secondes
+      const minRequiredTimestamp = currentTimestamp + SAFETY_BUFFER
+      
+      console.log("🕐 Vérification des fuseaux horaires...")
+      console.log("⏰ Heure locale actuelle:", new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' }))
+      console.log("🌍 Heure UTC actuelle:", new Date().toUTCString())
+      console.log("📅 Date de fin événement (local):", eventEndDate.toLocaleString('fr-FR'))
+      console.log("🌐 Date de fin événement (UTC):", eventEndDate.toUTCString())
+      console.log("⏱️  Timestamp actuel (UTC):", currentTimestamp, "→", new Date(currentTimestamp * 1000).toUTCString())
+      console.log("🎯 Timestamp fin événement:", eventEndTimestamp, "→", new Date(eventEndTimestamp * 1000).toUTCString())
+      console.log("⚡ Différence:", eventEndTimestamp - currentTimestamp, "secondes (", Math.floor((eventEndTimestamp - currentTimestamp) / 60), "minutes )")
+      
+      // Vérifier que la date de fin est dans le futur avec un buffer de sécurité
+      if (eventEndTimestamp <= minRequiredTimestamp) {
+        const minutesNeeded = Math.ceil((minRequiredTimestamp - eventEndTimestamp) / 60)
+        alert(`⚠️ ERREUR DE FUSEAU HORAIRE !\n\n` +
+          `La blockchain utilise l'heure UTC (universelle).\n\n` +
+          `Votre événement se termine à: ${eventEndDate.toUTCString()}\n` +
+          `Heure UTC actuelle: ${new Date().toUTCString()}\n\n` +
+          `❌ L'événement se termine dans ${minutesNeeded < 0 ? 'le passé' : minutesNeeded + ' minutes'} (en UTC).\n\n` +
+          `✅ Solution: Ajoutez au moins ${Math.abs(minutesNeeded) + 15} minutes à l'heure de fin.\n` +
+          `Exemple: Mettez 21:00 ou plus au lieu de ${formData.endTime}`)
+        setIsSubmitting(false)
+        return
+      }
+      
+      console.log("🔗 Création de l'événement payant sur la blockchain...")
+      console.log("Debug - Event ID:", eventId)
+      console.log("Debug - Prix:", registrationFee, "ETH")
+      console.log("Debug - Pourcentage redistribution:", payoutPercentage)
+      
+      try {
+        const result = await createEventOnChain(
+          eventId,
+          registrationFee,
+          eventEndTimestamp,
+          payoutPercentage
+        )
+        
+        if (result.success) {
+          console.log("✅ Événement créé sur la blockchain:", result.txHash)
+          alert(`✅ SUCCÈS !\n\nÉvénement créé avec succès sur la blockchain!\n\nTransaction: ${result.txHash}\n\nL'événement est maintenant disponible et toutes les fonctions blockchain fonctionneront.`)
+        } else {
+          console.error("⚠️ Erreur blockchain (événement créé quand même):", result.error)
+          alert(`⚠️ Événement créé localement, mais erreur blockchain:\n${result.error}\n\nL'événement est disponible mais les fonctions blockchain ne fonctionneront pas.`)
+        }
+      } catch (error: any) {
+        console.error("❌ Erreur lors de la création blockchain:", error)
+        // L'événement est quand même créé localement, donc on continue
+        alert(`ℹ️ Événement créé localement.\n\nUne erreur s'est produite lors de la confirmation blockchain, mais l'événement devrait être sur la blockchain.\n\nVérifiez la console pour plus de détails.`)
+      }
+    } else if (registrationFee === 0) {
+      console.log("✨ Événement gratuit créé (pas de blockchain nécessaire)")
+    }
 
     setIsSubmitting(false)
     router.push(`/events/${eventId}`)

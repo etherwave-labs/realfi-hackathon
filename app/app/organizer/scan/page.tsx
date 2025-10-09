@@ -12,11 +12,13 @@ import { useAuthStore } from "@/lib/auth-store"
 import { verifyQRCodeData, QRCodeData } from "@/lib/qr-code-utils"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useEscrow } from "@/hooks/use-escrow"
 
 export default function ScanQRCodePage() {
   const { events, registrations, checkInUser } = useEventsStore()
   const { user } = useAuthStore()
   const router = useRouter()
+  const { markAttendance } = useEscrow()
   const [selectedEventId, setSelectedEventId] = useState<string>("")
   
   // Filtrer pour ne montrer que les événements dont l'utilisateur est l'organisateur
@@ -99,10 +101,26 @@ export default function ScanQRCodePage() {
     }
   }
 
-  const handleCheckIn = () => {
-    if (verificationResult?.data) {
+  const handleCheckIn = async () => {
+    if (verificationResult?.data && verificationResult?.registration) {
+      // 1. Check-in dans la base de données locale
       checkInUser(verificationResult.data.registrationId)
-      alert(`✓ Check-in successful for ${verificationResult.data.registrationId}`)
+      
+      // 2. Marquer la présence sur la blockchain
+      const participantAddress = verificationResult.registration.userAddress
+      const eventId = verificationResult.data.eventId
+      
+      console.log("🔗 Marquage de présence sur la blockchain...")
+      const result = await markAttendance(eventId, participantAddress)
+      
+      if (result.success) {
+        console.log("✅ Présence marquée sur blockchain:", result.txHash)
+        alert(`✓ Check-in successful! Blockchain TX: ${result.txHash?.slice(0, 10)}...`)
+      } else {
+        console.error("⚠️ Erreur blockchain (check-in local OK):", result.error)
+        alert(`✓ Check-in successful locally (blockchain error: ${result.error})`)
+      }
+      
       setVerificationResult(null)
       setScannedData("")
     }

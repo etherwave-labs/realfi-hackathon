@@ -14,12 +14,16 @@ import { useAuthStore } from "@/lib/auth-store"
 import { useEventsStore, Event } from "@/lib/events-store"
 import { isEventPast } from "@/lib/event-utils"
 import { useRouter } from "next/navigation"
+import { useEscrow } from "@/hooks/use-escrow"
+import { Loader2, CheckCircle2 } from "lucide-react"
 
 export default function OrganizerDashboard() {
   const { user } = useAuthStore()
-  const { events, registrations, getEventRegistrations } = useEventsStore()
+  const { events, registrations, getEventRegistrations, updateEvent } = useEventsStore()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("overview")
+  const { finalizeEvent, isProcessing } = useEscrow()
+  const [finalizingEventId, setFinalizingEventId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -71,6 +75,29 @@ export default function OrganizerDashboard() {
       averageAttendance,
     }
   }, [myEvents, getEventRegistrations])
+
+  const handleFinalizeEvent = async (eventId: string, eventPrice: number) => {
+    if (eventPrice === 0) {
+      alert("ℹ️ Cet événement est gratuit, pas de finalisation nécessaire sur la blockchain.")
+      return
+    }
+
+    if (!confirm("Voulez-vous finaliser cet événement ?\n\nLes fonds seront redistribués automatiquement :\n- Vous recevrez votre part\n- Les participants présents pourront retirer leur bonus")) {
+      return
+    }
+
+    setFinalizingEventId(eventId)
+    const result = await finalizeEvent(eventId)
+    setFinalizingEventId(null)
+
+    if (result.success) {
+      updateEvent(eventId, { isFinalized: true })
+      
+      alert(`✅ Événement finalisé avec succès!\n\nTransaction: ${result.txHash}\n\nVous avez reçu vos fonds et la redistribution est disponible pour les participants présents.`)
+    } else {
+      alert(`❌ Erreur lors de la finalisation: ${result.error}`)
+    }
+  }
 
   if (!user) {
     return null
@@ -214,16 +241,43 @@ export default function OrganizerDashboard() {
                             <span>{revenue.toFixed(2)} USDC revenue</span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
+                          {event.price > 0 && isPast && !event.isFinalized && (
+                            <Button 
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleFinalizeEvent(event.id, event.price)}
+                              disabled={isProcessing || finalizingEventId === event.id}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                              title="Clore l'événement et recevoir les fonds"
+                            >
+                              {finalizingEventId === event.id ? (
+                                <>
+                                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                  Clôture...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                                  Clore Event
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          {event.price > 0 && event.isFinalized && (
+                            <span className="text-sm text-green-600 font-medium px-2 py-1 bg-green-50 rounded">
+                              ✅ Finalisé
+                            </span>
+                          )}
                           <Button variant="outline" size="sm" asChild>
                             <Link href={`/events/${event.id}`}>
-                              <Eye className="h-4 w-4 mr-1" />
+                              <Eye className="h-3 w-3 mr-1" />
                               View
                             </Link>
                           </Button>
                           <Button variant="outline" size="sm" asChild>
                             <Link href="/organizer/scan">
-                              <QrCode className="h-4 w-4 mr-1" />
+                              <QrCode className="h-3 w-3 mr-1" />
                               Scan
                             </Link>
                           </Button>
@@ -347,7 +401,7 @@ export default function OrganizerDashboard() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                             <div>
                               <span className="text-muted-foreground">Registered: </span>
                               <span className="font-medium">{eventRegs.length}</span>
@@ -366,6 +420,41 @@ export default function OrganizerDashboard() {
                                 {revenue.toFixed(2)} {event.currency}
                               </span>
                             </div>
+                          </div>
+
+                          <div className="flex gap-2 pt-2 border-t">
+                            {event.price > 0 && !event.isFinalized && (
+                              <Button 
+                                variant="default" 
+                                size="sm"
+                                onClick={() => handleFinalizeEvent(event.id, event.price)}
+                                disabled={isProcessing || finalizingEventId === event.id}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {finalizingEventId === event.id ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Finalisation...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                    Finaliser & Recevoir Fonds
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                            {event.price > 0 && event.isFinalized && (
+                              <span className="text-sm text-green-600 font-medium px-3 py-1.5 bg-green-50 rounded-md border border-green-200">
+                                ✅ Événement Finalisé
+                              </span>
+                            )}
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/events/${event.id}`}>
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Link>
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>

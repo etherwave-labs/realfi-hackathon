@@ -19,6 +19,8 @@ import { useEvent, useEvents } from "@/components/ui/use-events"
 import { useAuthStore } from "@/lib/auth-store"
 import { isEventPast } from "@/lib/event-utils"
 import { useEventsStore } from "@/lib/events-store"
+import { useEscrow } from "@/hooks/use-escrow"
+import { ethers } from "ethers"
 
 export default function EventDetailPage() {
   const params = useParams()
@@ -29,6 +31,13 @@ export default function EventDetailPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [transactionHash, setTransactionHash] = useState("")
   const [registrationId, setRegistrationId] = useState("")
+  const { getEventStats } = useEscrow()
+  const [blockchainStats, setBlockchainStats] = useState<{
+    totalParticipants: number
+    attendees: number
+    absentees: number
+    redistributionAmount: string
+  } | null>(null)
 
   const eventId = Array.isArray(params?.id) ? params.id[0] : params?.id
   const event = useEvent(eventId)
@@ -42,6 +51,24 @@ export default function EventDetailPage() {
       router.replace("/events")
     }
   }, [event, eventId, router])
+
+  // Charger les statistiques blockchain (seulement pour événements payants)
+  useEffect(() => {
+    const loadStats = async () => {
+      if (eventId && isPast && currentEvent && currentEvent.price > 0) {
+        const stats = await getEventStats(eventId)
+        if (stats) {
+          setBlockchainStats({
+            totalParticipants: Number(stats.totalParticipants),
+            attendees: Number(stats.attendeeCount),
+            absentees: Number(stats.absenteeCount),
+            redistributionAmount: ethers.formatEther(stats.redistributionAmount)
+          })
+        }
+      }
+    }
+    loadStats()
+  }, [eventId, isPast, currentEvent, getEventStats])
 
   if (!currentEvent) {
     return null
@@ -296,6 +323,47 @@ export default function EventDetailPage() {
           {/* Organizer Info Card */}
           <OrganizerInfoCard organizer={currentEvent.organizer} />
 
+          {/* Blockchain Stats (si événement passé) */}
+          {isPast && blockchainStats && (
+            <Card className="border-blue-400/30">
+              <CardHeader>
+                <CardTitle className="flex items-center text-blue-600">
+                  <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Statistiques Blockchain
+                </CardTitle>
+                <CardDescription>Données vérifiées sur la blockchain</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">👥 Inscrits:</span>
+                  <span className="font-semibold">{blockchainStats.totalParticipants}</span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">✅ Présents:</span>
+                  <span className="font-semibold text-green-600">{blockchainStats.attendees}</span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">❌ Absents:</span>
+                  <span className="font-semibold text-red-600">{blockchainStats.absentees}</span>
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">💰 Redistribué:</span>
+                  <span className="font-semibold text-blue-600">
+                    {parseFloat(blockchainStats.redistributionAmount).toFixed(4)} ETH
+                  </span>
+                </div>
+                <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-950/20 rounded text-xs text-center">
+                  ⛓️ Vérifié sur Sepolia
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Share Card */}
           <Card>
             <CardHeader>
@@ -353,7 +421,8 @@ export default function EventDetailPage() {
         price={currentEvent.price}
         currency={currentEvent.currency}
         walletAddress={user?.address || ""}
-        organizerWalletAddress={currentEvent.organizer?.walletAddress || ""} 
+        organizerWalletAddress={currentEvent.organizer?.walletAddress || ""}
+        eventId={currentEvent.id}
       />
 
       <ConfirmationModal

@@ -1,27 +1,28 @@
 import { Event } from "./events-store"
 
-/**
- * Vérifie si un événement est passé (complété)
- */
 export function isEventPast(event: Event): boolean {
   try {
-    // Essayer d'abord avec startDateTime s'il existe
+    if (event.endDateTime) {
+      const eventEndDate = new Date(event.endDateTime)
+      const now = new Date()
+      
+      console.log(`📅 Event "${event.title}" - End: ${eventEndDate.toUTCString()} | Now: ${now.toUTCString()} | isPast: ${eventEndDate < now}`)
+      
+      return eventEndDate < now
+    }
+
     if (event.startDateTime) {
       const eventDate = new Date(event.startDateTime)
       return eventDate < new Date()
     }
 
-    // Sinon, parser la date depuis le champ date
-    // Format attendu: "Dec 15, 2024" ou "15 Dec 2024"
     const dateStr = event.date
     const eventDate = new Date(dateStr)
     
-    // Si la date est invalide, considérer l'événement comme à venir
     if (isNaN(eventDate.getTime())) {
       return false
     }
 
-    // Comparer seulement la date (sans l'heure)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     eventDate.setHours(0, 0, 0, 0)
@@ -33,9 +34,6 @@ export function isEventPast(event: Event): boolean {
   }
 }
 
-/**
- * Sépare les événements en deux groupes : à venir et passés
- */
 export function separateEvents(events: Event[]): {
   upcomingEvents: Event[]
   pastEvents: Event[]
@@ -54,9 +52,6 @@ export function separateEvents(events: Event[]): {
   return { upcomingEvents, pastEvents }
 }
 
-/**
- * Trie les événements par date (les plus proches en premier)
- */
 export function sortEventsByDate(events: Event[]): Event[] {
   return [...events].sort((a, b) => {
     const dateA = a.startDateTime ? new Date(a.startDateTime) : new Date(a.date)

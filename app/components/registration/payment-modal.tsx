@@ -9,6 +9,7 @@ import { CheckCircle, Wallet, ArrowRight, Loader2, AlertCircle } from "lucide-re
 import { usePayment } from "@/hooks/use-payment"
 import { getUSDCBalance, getEthereumProvider } from "@/lib/payment-service"
 import { switchToArbitrumSepolia, ensureArbitrumSepolia } from "@/lib/network-utils"
+import { useEscrow } from "@/hooks/use-escrow"
 
 interface PaymentModalProps {
   isOpen: boolean
@@ -19,6 +20,7 @@ interface PaymentModalProps {
   currency: string
   walletAddress: string
   organizerWalletAddress: string
+  eventId?: string
 }
 
 export function PaymentModal({
@@ -30,8 +32,10 @@ export function PaymentModal({
   currency,
   walletAddress,
   organizerWalletAddress,
+  eventId,
 }: PaymentModalProps) {
   const { sendPayment, isProcessing, error } = usePayment()
+  const { purchaseTicket } = useEscrow()
   const [usdcBalance, setUsdcBalance] = useState<string>("0")
   const [ethBalance, setEthBalance] = useState<string>("0")
 
@@ -84,18 +88,8 @@ export function PaymentModal({
   const handlePayment = async () => {
     try {
       console.log("🔍 Starting payment process...")
-      console.log("📍 Organizer wallet address:", organizerWalletAddress)
-      console.log("💰 Amount:", price, "USDC")
-      
-      // Vérifier que l'adresse de l'organisateur est valide
-      if (!organizerWalletAddress || organizerWalletAddress === "") {
-        console.error("❌ No organizer wallet address provided!")
-        alert("Erreur: Aucune adresse de wallet pour l'organisateur")
-        return
-      }
-
-      // FORCER le switch vers Ethereum Sepolia AVANT toute transaction
-      console.log("🌐 Forcing switch to Ethereum Sepolia...")
+      console.log("💰 Amount:", price, currency)
+      console.log("🎫 Event ID:", eventId)
       
       // Vérifier le réseau actuel
       const provider = getEthereumProvider()
@@ -113,7 +107,6 @@ export function PaymentModal({
             return
           }
           
-          // Attendre un peu que le réseau soit bien changé
           await new Promise(resolve => setTimeout(resolve, 1000))
         } else {
           console.log("✅ Already on Ethereum Sepolia")
@@ -122,22 +115,36 @@ export function PaymentModal({
 
       console.log("✅ Network OK, sending payment...")
       
-      // 🔥 IMPORTANT : Fermer cette modal AVANT d'ouvrir Human Wallet
-      // Cela évite que cette modal bloque les clics sur Human Wallet
+      // Fermer cette modal AVANT d'ouvrir Human Wallet
       onClose()
       
       // Petit délai pour permettre à la modal de se fermer proprement
       await new Promise(resolve => setTimeout(resolve, 300))
       
-      const result = await sendPayment(organizerWalletAddress, price)
-      
-      if (result.success && result.transactionHash) {
-        console.log("✅ Payment successful! TX:", result.transactionHash)
-        onConfirm(result.transactionHash)
+      // Utiliser le smart contract si eventId est fourni ET que c'est payant
+      if (eventId && price > 0) {
+        console.log("🔗 Achat de billet via smart contract...")
+        const result = await purchaseTicket(eventId, price)
+        
+        if (result.success && result.txHash) {
+          console.log("✅ Ticket purchased on blockchain! TX:", result.txHash)
+          onConfirm(result.txHash)
+        } else {
+          console.error("❌ Purchase failed:", result.error)
+          alert(`❌ Paiement échoué: ${result.error}`)
+        }
       } else {
-        console.error("❌ Payment failed:", result.error)
-        // Si échec, on pourrait réouvrir la modal ou afficher l'erreur autrement
-        alert(`❌ Paiement échoué: ${result.error}`)
+        // Fallback sur paiement direct USDC ou événement gratuit
+        console.log(price === 0 ? "✨ Événement gratuit" : "📤 Paiement direct USDC...")
+        const result = await sendPayment(organizerWalletAddress, price)
+        
+        if (result.success && result.transactionHash) {
+          console.log("✅ Payment successful! TX:", result.transactionHash)
+          onConfirm(result.transactionHash)
+        } else {
+          console.error("❌ Payment failed:", result.error)
+          alert(`❌ Paiement échoué: ${result.error}`)
+        }
       }
     } catch (err) {
       console.error("❌ Payment error:", err)
@@ -301,13 +308,13 @@ export function PaymentModal({
           {/* Payment Terms */}
           <div className="text-xs text-muted-foreground space-y-2">
             <p>
-              <strong>Refund Policy:</strong> Full refund + 20% bonus if you attend the event
+              <strong>Refund Policy:</strong> Full refund + bonus if you attend the event
             </p>
             <p>
               <strong>No-show Policy:</strong> No refund if you don't attend
             </p>
             <p>
-              <strong>Smart Contract:</strong> Payments are processed automatically via smart contract
+              <strong>Smart Contract:</strong> {eventId && price > 0 ? "✅ Paiement sécurisé via smart contract (0xB587...944F)" : price === 0 ? "✨ Événement gratuit" : "Paiement direct à l'organisateur"}
             </p>
           </div>
 
