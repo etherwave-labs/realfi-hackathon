@@ -1,4 +1,4 @@
-# RealFi - Event Escrow Platform
+# RealFi - EventChain
 
 **Etherwave Labs's contribution to Funding the Commons's hackathon: RealFi**
 
@@ -87,8 +87,7 @@ Visit the [Circle USDC Faucet](https://faucet.circle.com/) to get test USDC on S
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: Next.js 15, React, TypeScript
-- **Styling**: Tailwind CSS, shadcn/ui
+- **Frontend**: Next.js, React, TypeScript
 - **Blockchain**: Ethereum (Sepolia), Solidity ^0.8.30
 - **Web3**: ethers.js, Human Wallet SDK
 - **State Management**: Zustand
