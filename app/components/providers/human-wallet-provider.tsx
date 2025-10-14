@@ -14,9 +14,20 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
   useEffect(() => {
     const initWallet = async () => {
       try {
+        // Vérifier si on revient d'une authentification email (callback WAAP)
+        const urlParams = new URLSearchParams(window.location.search)
+        const hasEmailCallback = urlParams.has('bundle') || urlParams.has('token') || urlParams.has('state')
+        
         // Vérifier si Human Wallet est déjà initialisé
         if (window.silk) {
           setIsInitialized(true)
+          
+          // Si on revient d'un callback email, attendre que la session soit établie
+          if (hasEmailCallback) {
+            console.log("📧 Détection d'un callback d'authentification email...")
+            // Attendre un peu pour que le SDK finalise l'authentification
+            await new Promise(resolve => setTimeout(resolve, 1000))
+          }
           
           // Vérifier la session existante
           try {
@@ -27,7 +38,12 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
                 ? { username: user.username, avatar: user.avatar }
                 : {}
               setUser({ address: accounts[0], ...preservedProfile })
-              console.log("✅ Utilisateur restauré:", accounts[0])
+              console.log("✅ Utilisateur connecté:", accounts[0])
+              
+              // Nettoyer l'URL après le callback
+              if (hasEmailCallback) {
+                window.history.replaceState({}, document.title, window.location.pathname)
+              }
             } else {
               // Pas de compte connecté, réinitialiser l'utilisateur
               console.log("🔓 Pas de wallet connecté, nettoyage de l'état")
