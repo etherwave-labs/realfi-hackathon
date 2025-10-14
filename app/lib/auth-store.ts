@@ -80,10 +80,13 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          if (typeof window !== "undefined" && window.silk) {
-            // Human Wallet ne fournit pas de méthode logout explicite
-            // On efface juste l'état local
-            set({ user: null })
+          // Effacer l'utilisateur du state
+          set({ user: null })
+          
+          // Nettoyer le localStorage manuellement pour être sûr
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("eventchain-auth")
+            console.log("🗑️ localStorage nettoyé lors de la déconnexion")
           }
         } catch (error) {
           console.error("Logout error:", error)
@@ -113,6 +116,22 @@ export const useAuthStore = create<AuthState>()(
       name: "eventchain-auth",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ user: state.user }),
+      // Valider les données restaurées depuis le localStorage
+      merge: (persistedState: any, currentState: AuthState) => {
+        // Si l'utilisateur persisté n'a pas d'adresse valide, on l'ignore
+        if (persistedState?.user && !persistedState.user.address) {
+          console.log("🗑️ User invalide dans localStorage, ignoré")
+          return { ...currentState, user: null }
+        }
+        return { ...currentState, ...persistedState }
+      },
+      onRehydrateStorage: () => (state) => {
+        // Vérifier après la restauration
+        if (state?.user && !state.user.address) {
+          console.log("🗑️ Nettoyage user invalide après restauration")
+          state.user = null
+        }
+      },
     },
   ),
 )

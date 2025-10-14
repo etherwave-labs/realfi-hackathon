@@ -21,19 +21,25 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
           // Vérifier la session existante
           try {
             const accounts = await window.silk.request({ method: "eth_accounts" })
-            if (accounts && accounts.length > 0) {
+            if (accounts && accounts.length > 0 && accounts[0]) {
               // Préserver le profil si c'est le même utilisateur
               const preservedProfile = user && user.address === accounts[0]
                 ? { username: user.username, avatar: user.avatar }
                 : {}
               setUser({ address: accounts[0], ...preservedProfile })
+              console.log("✅ Utilisateur restauré:", accounts[0])
             } else {
               // Pas de compte connecté, réinitialiser l'utilisateur
+              console.log("🔓 Pas de wallet connecté, nettoyage de l'état")
               setUser(null)
+              // Nettoyer aussi le localStorage
+              localStorage.removeItem("eventchain-auth")
             }
           } catch (error) {
             // Session non trouvée, réinitialiser l'utilisateur
+            console.log("🔓 Erreur wallet, nettoyage de l'état")
             setUser(null)
+            localStorage.removeItem("eventchain-auth")
           }
           return
         }
@@ -58,7 +64,7 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
           try {
             // @ts-ignore
             const accounts = await window.silk.request({ method: "eth_accounts" })
-            if (accounts && accounts.length > 0) {
+            if (accounts && accounts.length > 0 && accounts[0]) {
               // Préserver le profil si c'est le même utilisateur
               const currentUser = useAuthStore.getState().user
               const preservedProfile = currentUser && currentUser.address === accounts[0]
@@ -68,13 +74,18 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
                 address: accounts[0],
                 ...preservedProfile,
               })
+              console.log("✅ Utilisateur restauré:", accounts[0])
             } else {
               // Pas de compte connecté, réinitialiser l'utilisateur
+              console.log("🔓 Pas de wallet connecté, nettoyage de l'état")
               setUser(null)
+              localStorage.removeItem("eventchain-auth")
             }
           } catch (error) {
             // Session non trouvée, réinitialiser l'utilisateur
+            console.log("🔓 Erreur wallet, nettoyage de l'état")
             setUser(null)
+            localStorage.removeItem("eventchain-auth")
           }
 
           // Écouter les changements de compte
