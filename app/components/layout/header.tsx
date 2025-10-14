@@ -82,7 +82,7 @@ export function Header() {
                 Create Event
               </Link>
             </Button>
-            {user ? (
+            {user && user.address ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

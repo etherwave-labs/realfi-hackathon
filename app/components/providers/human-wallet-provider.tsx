@@ -27,9 +27,13 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
                 ? { username: user.username, avatar: user.avatar }
                 : {}
               setUser({ address: accounts[0], ...preservedProfile })
+            } else {
+              // Pas de compte connecté, réinitialiser l'utilisateur
+              setUser(null)
             }
           } catch (error) {
-            // Session non trouvée, c'est normal
+            // Session non trouvée, réinitialiser l'utilisateur
+            setUser(null)
           }
           return
         }
@@ -64,9 +68,13 @@ export function HumanWalletProvider({ children }: HumanWalletProviderProps) {
                 address: accounts[0],
                 ...preservedProfile,
               })
+            } else {
+              // Pas de compte connecté, réinitialiser l'utilisateur
+              setUser(null)
             }
           } catch (error) {
-            // Session non trouvée, c'est normal
+            // Session non trouvée, réinitialiser l'utilisateur
+            setUser(null)
           }
 
           // Écouter les changements de compte
