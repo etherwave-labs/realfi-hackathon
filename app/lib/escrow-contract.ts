@@ -6,13 +6,13 @@ async function sendTransactionViaHumanWallet(params: {
   data: string
   value: string
 }): Promise<string> {
-  if (typeof window === "undefined" || !window.silk) {
+  if (typeof window === "undefined" || !window.waap) {
     throw new Error("Human Wallet non disponible")
   }
 
   try {
     // @ts-ignore
-    const txHash = await window.silk.request({
+    const txHash = await window.waap.request({
       method: "eth_sendTransaction",
       params: [{ ...params, type: "0x1" }],
     })
@@ -21,7 +21,7 @@ async function sendTransactionViaHumanWallet(params: {
   } catch (error: any) {
     console.log("⚠️ Type 0x1 échoué, essai sans type...")
     // @ts-ignore
-    const txHash = await window.silk.request({
+    const txHash = await window.waap.request({
       method: "eth_sendTransaction",
       params: [params],
     })
@@ -324,7 +324,7 @@ export async function createEventOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       console.log("🚀 Envoi via Human Wallet...")
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
@@ -409,7 +409,7 @@ export async function approveUSDCForEscrow(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       console.log("🚀 Envoi approbation via Human Wallet...")
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
@@ -497,7 +497,7 @@ export async function purchaseTicketOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       console.log("🚀 Envoi via Human Wallet...")
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
@@ -559,7 +559,7 @@ export async function markAttendanceOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
         to: ESCROW_CONTRACT_ADDRESS,
@@ -604,7 +604,7 @@ export async function markAttendanceBatchOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
         to: ESCROW_CONTRACT_ADDRESS,
@@ -648,7 +648,7 @@ export async function finalizeEventOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
         to: ESCROW_CONTRACT_ADDRESS,
@@ -692,7 +692,7 @@ export async function withdrawRedistributionOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
         to: ESCROW_CONTRACT_ADDRESS,
@@ -843,7 +843,7 @@ export async function cancelEventOnChain(
 
     let txHash: string
 
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       txHash = await sendTransactionViaHumanWallet({
         from: userAddress,
         to: ESCROW_CONTRACT_ADDRESS,

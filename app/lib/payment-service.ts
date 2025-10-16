@@ -124,12 +124,12 @@ export async function sendUSDCPayment(params: PaymentParams): Promise<PaymentRes
       amount,
     ])
 
-    // Envoyer la transaction via window.silk (Human Wallet)
+    // Envoyer la transaction via window.waap (Human Wallet)
     let txHash: string
     
-    if (typeof window !== "undefined" && window.silk) {
+    if (typeof window !== "undefined" && window.waap) {
       // @ts-ignore
-      txHash = await window.silk.request({
+      txHash = await window.waap.request({
         method: "eth_sendTransaction",
         params: [
           {
@@ -200,8 +200,8 @@ export function getEthereumProvider(): any {
   }
 
   // Essayer d'abord Human Wallet (silk)
-  if (window.silk) {
-    return new ethers.BrowserProvider(window.silk as any)
+  if (window.waap) {
+    return new ethers.BrowserProvider(window.waap as any)
   }
 
   // Sinon utiliser window.ethereum (MetaMask, etc.)

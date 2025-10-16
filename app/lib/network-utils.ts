@@ -36,7 +36,7 @@ export async function switchToArbitrumSepolia(): Promise<boolean> {
     return false
   }
 
-  const provider = window.silk || window.ethereum
+  const provider = window.waap || window.ethereum
 
   if (!provider) {
     console.error("No wallet provider found")
@@ -68,7 +68,7 @@ export async function isOnArbitrumSepolia(): Promise<boolean> {
     return false
   }
 
-  const provider = window.silk || window.ethereum
+  const provider = window.waap || window.ethereum
 
   if (!provider) {
     return false

@@ -14,9 +14,9 @@ export function NetworkCheckBanner() {
   const checkNetwork = async () => {
     setIsLoading(true)
     try {
-      if (typeof window !== "undefined" && window.silk) {
+      if (typeof window !== "undefined" && window.waap) {
         try {
-          const chainIdHex = await window.silk.request({ method: "eth_chainId" })
+          const chainIdHex = await window.waap.request({ method: "eth_chainId" })
           const chainId = parseInt(chainIdHex, 16)
           
           const networkNames: { [key: number]: string } = {
@@ -33,8 +33,8 @@ export function NetworkCheckBanner() {
           setIsCorrectNetwork(chainId === 11155111)
           
           return
-        } catch (silkError) {
-          console.error("Error with window.silk:", silkError)
+        } catch (waapError) {
+          console.error("Error with window.waap:", waapError)
         }
       }
       
@@ -76,12 +76,12 @@ export function NetworkCheckBanner() {
         checkNetwork()
       }
       
-      if (window.silk) {
-        window.silk.on("chainChanged", handleChainChanged)
+      if (window.waap) {
+        window.waap.on("chainChanged", handleChainChanged)
         
         return () => {
-          if (window.silk?.removeListener) {
-            window.silk.removeListener("chainChanged", handleChainChanged)
+          if (window.waap?.removeListener) {
+            window.waap.removeListener("chainChanged", handleChainChanged)
           }
         }
       }
