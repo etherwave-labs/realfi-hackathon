@@ -4,6 +4,10 @@
 
 A decentralized event management platform that incentivizes attendance through USDC deposits and smart contract-based redistribution.
 
+>[!NOTE]
+>This project **won the first place with a $5000 cash prize in the Secure Onboarding to RealFi track** sponsored by [human.tech](https://human.tech)!
+> Check the full hackathon results [here](https://discord.com/channels/1255586641536487494/1420809142007758858/1429930886354178079)
+
 ## 🎯 Overview
 
 RealFi is a blockchain-powered event platform that solves the no-show problem by:
